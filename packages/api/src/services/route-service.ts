@@ -1,0 +1,98 @@
+import { pool } from '../lib/db';
+import { Route } from '@lattice/core';
+
+/**
+ * Service for managing routes
+ */
+export class RouteService {
+  /**
+   * Upsert routes for a service - replaces all existing routes
+   */
+  async upsertRoutes(serviceId: string, routes: Route[]) {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // Delete existing routes for this service
+      await client.query('DELETE FROM "Route" WHERE "serviceId" = $1', [serviceId]);
+
+      // Insert new routes
+      for (const route of routes) {
+        const query = `
+          INSERT INTO "Route" (
+            id, "serviceId", method, path, "middlewareChain", "handlerLocation",
+            "pathParameters", "queryParameters", "requestSchema", "responseSchema",
+            description, tags, "avgResponseTimeMs", "callFrequency", "errorRate",
+            "firstSeen", "lastSeen", metadata
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW(), $16)
+        `;
+
+        const values = [
+          route.id,
+          serviceId,
+          route.method,
+          route.path,
+          route.middlewareChain || [],
+          route.handlerLocation ? JSON.stringify(route.handlerLocation) : null,
+          route.pathParameters ? JSON.stringify(route.pathParameters) : null,
+          route.queryParameters ? JSON.stringify(route.queryParameters) : null,
+          route.requestSchema ? JSON.stringify(route.requestSchema) : null,
+          route.responseSchema ? JSON.stringify(route.responseSchema) : null,
+          route.description || null,
+          route.tags || [],
+          route.avgResponseTimeMs || null,
+          route.callFrequency || null,
+          route.errorRate || null,
+          route.metadata ? JSON.stringify(route.metadata) : null,
+        ];
+
+        await client.query(query, values);
+      }
+
+      await client.query('COMMIT');
+      return routes.length;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Search routes across all services
+   */
+  async searchRoutes(filters?: {
+    path?: string;
+    method?: string;
+    serviceId?: string;
+  }) {
+    const where: Record<string, unknown> = {};
+
+    if (filters?.path) {
+      where['path'] = { contains: filters.path };
+    }
+
+    if (filters?.method) {
+      where['method'] = filters.method;
+    }
+
+    if (filters?.serviceId) {
+      where['serviceId'] = filters.serviceId;
+    }
+
+    return prisma.route.findMany({
+      where,
+      include: {
+        service: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+  }
+}

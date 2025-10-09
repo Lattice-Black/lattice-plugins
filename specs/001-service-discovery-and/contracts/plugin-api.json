@@ -1,0 +1,367 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Lattice Plugin API",
+    "version": "1.0.0",
+    "description": "API for plugins to submit service metadata to the Lattice collector",
+    "contact": {
+      "name": "Lattice Team",
+      "url": "https://lattice.dev"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.lattice.dev/v1",
+      "description": "Production"
+    },
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Local development"
+    }
+  ],
+  "security": [
+    {
+      "apiKey": []
+    }
+  ],
+  "paths": {
+    "/ingest/metadata": {
+      "post": {
+        "summary": "Submit service metadata",
+        "description": "Plugins submit discovered service metadata including routes and dependencies",
+        "operationId": "submitServiceMetadata",
+        "tags": ["Plugin Ingestion"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceMetadataSubmission"
+              },
+              "examples": {
+                "expressService": {
+                  "summary": "Express.js service submission",
+                  "value": {
+                    "service": {
+                      "id": "clxyz123abc",
+                      "name": "user-service",
+                      "version": "1.2.3",
+                      "language": "typescript",
+                      "framework": "express",
+                      "runtime": "node-18",
+                      "status": "active",
+                      "discoveredBy": {
+                        "pluginName": "@lattice/plugin-express",
+                        "pluginVersion": "1.0.0",
+                        "schemaVersion": "1.0.0"
+                      }
+                    },
+                    "routes": [
+                      {
+                        "id": "route_abc123",
+                        "serviceId": "clxyz123abc",
+                        "method": "GET",
+                        "path": "/users/:id",
+                        "middlewareChain": ["authenticate", "authorize"]
+                      }
+                    ],
+                    "dependencies": [
+                      {
+                        "id": "dep_xyz789",
+                        "serviceId": "clxyz123abc",
+                        "packageName": "express",
+                        "version": "4.18.2",
+                        "dependencyType": "direct"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Metadata accepted and stored",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "serviceId": {
+                      "type": "string",
+                      "example": "clxyz123abc"
+                    },
+                    "routesProcessed": {
+                      "type": "integer",
+                      "example": 15
+                    },
+                    "dependenciesProcessed": {
+                      "type": "integer",
+                      "example": 42
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - schema validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Schema version conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchemaVersionError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "API health check",
+        "description": "Check if the collector API is operational",
+        "operationId": "healthCheck",
+        "tags": ["Health"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    },
+                    "schemaVersion": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/schemas/{version}": {
+      "get": {
+        "summary": "Get JSON Schema",
+        "description": "Retrieve the JSON Schema for a specific version",
+        "operationId": "getSchema",
+        "tags": ["Schema Registry"],
+        "security": [],
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "description": "Schema version (e.g., 1.0.0 or 'latest')",
+            "schema": {
+              "type": "string",
+              "example": "1.0.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSON Schema definition",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Schema version not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Lattice-API-Key",
+        "description": "API key for plugin authentication"
+      }
+    },
+    "schemas": {
+      "ServiceMetadataSubmission": {
+        "type": "object",
+        "required": ["service"],
+        "properties": {
+          "service": {
+            "$ref": "#/components/schemas/Service"
+          },
+          "routes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Route"
+            }
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dependency"
+            }
+          }
+        }
+      },
+      "Service": {
+        "type": "object",
+        "required": ["id", "name", "language", "framework", "status", "discoveredBy"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string", "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$" },
+          "version": { "type": "string" },
+          "environment": { "type": "string", "enum": ["development", "staging", "production"] },
+          "language": { "type": "string" },
+          "framework": { "type": "string" },
+          "runtime": { "type": "string" },
+          "status": { "type": "string", "enum": ["active", "inactive", "unknown"] },
+          "discoveredBy": {
+            "type": "object",
+            "required": ["pluginName", "pluginVersion", "schemaVersion"],
+            "properties": {
+              "pluginName": { "type": "string" },
+              "pluginVersion": { "type": "string" },
+              "schemaVersion": { "type": "string" }
+            }
+          },
+          "metadata": { "type": "object" }
+        }
+      },
+      "Route": {
+        "type": "object",
+        "required": ["id", "serviceId", "method", "path"],
+        "properties": {
+          "id": { "type": "string" },
+          "serviceId": { "type": "string" },
+          "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "ALL"] },
+          "path": { "type": "string", "pattern": "^\/" },
+          "middlewareChain": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "metadata": { "type": "object" }
+        }
+      },
+      "Dependency": {
+        "type": "object",
+        "required": ["id", "serviceId", "packageName", "version", "dependencyType"],
+        "properties": {
+          "id": { "type": "string" },
+          "serviceId": { "type": "string" },
+          "packageName": { "type": "string" },
+          "version": { "type": "string" },
+          "dependencyType": { "type": "string", "enum": ["direct", "transitive", "peer", "dev"] },
+          "installedSize": { "type": "integer", "minimum": 0 },
+          "metadata": { "type": "object" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "message": {
+            "type": "string",
+            "example": "Service name must be 2-63 characters"
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      },
+      "SchemaVersionError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Schema version not supported"
+          },
+          "submittedVersion": {
+            "type": "string",
+            "example": "2.0.0"
+          },
+          "supportedVersions": {
+            "type": "array",
+            "items": { "type": "string" },
+            "example": ["1.0.0", "1.1.0"]
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Plugin Ingestion",
+      "description": "Endpoints for plugins to submit service metadata"
+    },
+    {
+      "name": "Health",
+      "description": "Health and status checks"
+    },
+    {
+      "name": "Schema Registry",
+      "description": "JSON Schema distribution"
+    }
+  ]
+}
