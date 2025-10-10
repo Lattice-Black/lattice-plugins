@@ -15,16 +15,16 @@ export class RouteService {
       await client.query('BEGIN');
 
       // Delete existing routes for this service
-      await client.query('DELETE FROM "Route" WHERE "serviceId" = $1', [serviceId]);
+      await client.query('DELETE FROM routes WHERE service_id = $1', [serviceId]);
 
       // Insert new routes
       for (const route of routes) {
         const query = `
-          INSERT INTO "Route" (
-            id, "serviceId", method, path, "middlewareChain", "handlerLocation",
-            "pathParameters", "queryParameters", "requestSchema", "responseSchema",
-            description, tags, "avgResponseTimeMs", "callFrequency", "errorRate",
-            "firstSeen", "lastSeen", metadata
+          INSERT INTO routes (
+            id, service_id, method, path, middleware_chain, handler_location,
+            path_parameters, query_parameters, request_schema, response_schema,
+            description, tags, avg_response_time_ms, call_frequency, error_rate,
+            first_seen, last_seen, metadata
           )
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, NOW(), NOW(), $16)
         `;

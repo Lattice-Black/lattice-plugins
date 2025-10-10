@@ -15,16 +15,16 @@ export class DependencyService {
       await client.query('BEGIN');
 
       // Delete existing dependencies for this service
-      await client.query('DELETE FROM "Dependency" WHERE "serviceId" = $1', [serviceId]);
+      await client.query('DELETE FROM dependencies WHERE service_id = $1', [serviceId]);
 
       // Insert new dependencies
       for (const dep of dependencies) {
         const query = `
-          INSERT INTO "Dependency" (
-            id, "serviceId", "packageName", version, "versionRange", "dependencyType",
-            scope, "installedSize", "publishSize", "fileCount", "hasVulnerabilities",
-            "vulnerabilityCount", "highestSeverity", description, license, repository,
-            homepage, "firstSeen", "lastSeen", metadata
+          INSERT INTO dependencies (
+            id, service_id, package_name, version, version_range, dependency_type,
+            scope, installed_size, publish_size, file_count, has_vulnerabilities,
+            vulnerability_count, highest_severity, description, license, repository,
+            homepage, first_seen, last_seen, metadata
           )
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW(), $18)
         `;

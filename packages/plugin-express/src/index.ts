@@ -10,6 +10,7 @@ import { RouteAnalyzer } from './discovery/route-analyzer';
 import { DependencyAnalyzer } from './discovery/dependency-analyzer';
 import { ServiceNameDetector } from './discovery/service-name-detector';
 import { ApiClient } from './client/api-client';
+import { MetricsTracker } from './middleware/metrics-tracker';
 
 /**
  * Lattice Plugin for Express.js
@@ -23,6 +24,7 @@ export class LatticePlugin {
   private apiClient: ApiClient;
   private metadata: ServiceMetadataSubmission | null = null;
   private submitTimer: NodeJS.Timeout | null = null;
+  private metricsTracker: MetricsTracker | null = null;
 
   constructor(config: LatticeConfig = {}) {
     // Merge config with defaults
@@ -199,6 +201,18 @@ export class LatticePlugin {
       clearInterval(this.submitTimer);
       this.submitTimer = null;
     }
+  }
+
+  /**
+   * Create metrics tracking middleware
+   * Must be called after analyze() to get the service name
+   */
+  createMetricsMiddleware() {
+    if (!this.metricsTracker) {
+      const serviceName = this.getServiceName();
+      this.metricsTracker = new MetricsTracker(serviceName, this.config.apiEndpoint);
+    }
+    return this.metricsTracker.middleware();
   }
 
   /**

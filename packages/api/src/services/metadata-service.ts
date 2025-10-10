@@ -10,26 +10,26 @@ export class MetadataService {
    */
   async upsertService(service: Service) {
     const query = `
-      INSERT INTO "Service" (
-        id, name, version, environment, "deploymentType", language, framework,
-        runtime, description, repository, "healthCheckUrl", status, "firstSeen",
-        "lastSeen", "discoveredBy", metadata
+      INSERT INTO services (
+        id, name, version, environment, deployment_type, language, framework,
+        runtime, description, repository, health_check_url, status, first_seen,
+        last_seen, discovered_by, metadata
       )
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW(), $13, $14)
       ON CONFLICT (name)
       DO UPDATE SET
         version = $3,
         environment = $4,
-        "deploymentType" = $5,
+        deployment_type = $5,
         language = $6,
         framework = $7,
         runtime = $8,
         description = $9,
         repository = $10,
-        "healthCheckUrl" = $11,
+        health_check_url = $11,
         status = $12,
-        "lastSeen" = NOW(),
-        "discoveredBy" = $13,
+        last_seen = NOW(),
+        discovered_by = $13,
         metadata = $14
       RETURNING *
     `;
@@ -69,9 +69,9 @@ export class MetadataService {
           json_agg(DISTINCT d.*) FILTER (WHERE d.id IS NOT NULL),
           '[]'
         ) as dependencies
-      FROM "Service" s
-      LEFT JOIN "Route" r ON r."serviceId" = s.id
-      LEFT JOIN "Dependency" d ON d."serviceId" = s.id
+      FROM services s
+      LEFT JOIN routes r ON r.service_id = s.id
+      LEFT JOIN dependencies d ON d.service_id = s.id
       WHERE s.id = $1
       GROUP BY s.id
     `;
@@ -94,9 +94,9 @@ export class MetadataService {
           json_agg(DISTINCT d.*) FILTER (WHERE d.id IS NOT NULL),
           '[]'
         ) as dependencies
-      FROM "Service" s
-      LEFT JOIN "Route" r ON r."serviceId" = s.id
-      LEFT JOIN "Dependency" d ON d."serviceId" = s.id
+      FROM services s
+      LEFT JOIN routes r ON r.service_id = s.id
+      LEFT JOIN dependencies d ON d.service_id = s.id
       WHERE s.name = $1
       GROUP BY s.id
     `;
@@ -138,11 +138,11 @@ export class MetadataService {
     const limit = filters?.limit || 50;
     const offset = filters?.offset || 0;
 
-    const countQuery = `SELECT COUNT(*) FROM "Service" ${whereClause}`;
+    const countQuery = `SELECT COUNT(*) FROM services ${whereClause}`;
     const servicesQuery = `
-      SELECT * FROM "Service"
+      SELECT * FROM services
       ${whereClause}
-      ORDER BY "lastSeen" DESC
+      ORDER BY last_seen DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 

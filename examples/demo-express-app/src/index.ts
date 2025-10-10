@@ -6,6 +6,8 @@ const app = express();
 // Middleware
 app.use(express.json());
 
+// Note: Metrics middleware will be added after Lattice is initialized
+
 // Sample routes
 app.get('/', (req, res) => {
   res.json({ message: 'Hello from demo app!' });
@@ -20,6 +22,20 @@ app.get('/users', (req, res) => {
 
 app.get('/users/:id', (req, res) => {
   res.json({ id: req.params.id, name: 'User' });
+});
+
+// New route that calls the order-service
+app.get('/users/:id/orders', async (req, res) => {
+  try {
+    const response = await fetch(`http://localhost:3002/orders/user/${req.params.id}`);
+    const orders = await response.json();
+    res.json({
+      userId: req.params.id,
+      orders,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
 });
 
 app.post('/users', (req, res) => {
@@ -73,19 +89,24 @@ const lattice = new LatticePlugin({
   try {
     await lattice.analyze(app);
 
+    // Add metrics middleware after analyzing
+    app.use(lattice.createMetricsMiddleware());
+    console.log('📊 Metrics tracking enabled');
+
     // Start server
     const PORT = 3001;
     app.listen(PORT, () => {
       console.log(`\n🚀 Demo Express app running on http://localhost:${PORT}`);
       console.log(`\nAvailable routes:`);
-      console.log(`  GET  http://localhost:${PORT}/`);
-      console.log(`  GET  http://localhost:${PORT}/users`);
-      console.log(`  GET  http://localhost:${PORT}/users/:id`);
-      console.log(`  POST http://localhost:${PORT}/users`);
-      console.log(`  PUT  http://localhost:${PORT}/users/:id`);
+      console.log(`  GET    http://localhost:${PORT}/`);
+      console.log(`  GET    http://localhost:${PORT}/users`);
+      console.log(`  GET    http://localhost:${PORT}/users/:id`);
+      console.log(`  GET    http://localhost:${PORT}/users/:id/orders (fetches from order-service)`);
+      console.log(`  POST   http://localhost:${PORT}/users`);
+      console.log(`  PUT    http://localhost:${PORT}/users/:id`);
       console.log(`  DELETE http://localhost:${PORT}/users/:id`);
-      console.log(`  GET  http://localhost:${PORT}/posts`);
-      console.log(`  GET  http://localhost:${PORT}/posts/:id`);
+      console.log(`  GET    http://localhost:${PORT}/posts`);
+      console.log(`  GET    http://localhost:${PORT}/posts/:id`);
     });
   } catch (error) {
     console.error('Failed to start app:', error);

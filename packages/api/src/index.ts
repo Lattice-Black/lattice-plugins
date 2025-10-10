@@ -21,7 +21,13 @@ const createApp = (): express.Application => {
     })
   );
 
-  // Body parsing
+  // Stripe webhook needs raw body for signature verification
+  app.use(
+    '/api/v1/webhooks/stripe',
+    express.raw({ type: 'application/json' })
+  );
+
+  // Body parsing for all other routes
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true }));
 
