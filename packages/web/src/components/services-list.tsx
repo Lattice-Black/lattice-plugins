@@ -8,7 +8,6 @@ import type { Service } from '@/types';
 
 export function ServicesList() {
   const [services, setServices] = useState<Service[]>([]);
-  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +17,6 @@ export function ServicesList() {
         setLoading(true);
         const data = await fetchServices({ limit: 50 });
         setServices(data.services || []);
-        setTotal(data.total || 0);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load services');
       } finally {
