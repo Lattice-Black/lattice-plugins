@@ -84,6 +84,15 @@ A developer wants to understand which services depend on which npm packages and 
 - How are circular dependencies represented in the visualization?
 - What happens when route handlers are defined in dynamically imported modules?
 
+### Security & Multi-Tenancy Edge Cases
+
+- What happens if a user tries to access another user's service by guessing the service ID?
+- How does the system prevent API key sharing between users?
+- What happens if a compromised API key is used to inject malicious service data?
+- How are database queries protected against SQL injection when filtering by user_id?
+- What happens if Row-Level Security (RLS) policies fail or are misconfigured?
+- How does the system handle authentication token expiration during active dashboard sessions?
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
@@ -103,10 +112,15 @@ A developer wants to understand which services depend on which npm packages and 
 - **FR-008**: The system MUST detect when services communicate by correlating HTTP requests across instrumented services
 - **FR-009**: The system MUST support both snapshot (periodic reporting) and real-time (event-based) data collection modes
 - **FR-010**: The API MUST provide authentication to prevent unauthorized services from submitting metadata
+- **FR-010.1**: The system MUST implement comprehensive multi-tenancy with user isolation (see spec 006-multi-tenancy-security.md)
+- **FR-010.2**: All services, routes, dependencies, and metrics MUST be associated with a specific user account
+- **FR-010.3**: Database queries MUST filter all data by user_id to prevent cross-tenant data leakage
 
 #### Visualization Dashboard
 
 - **FR-011**: The dashboard MUST display each service as a visual card with name, status, and summary statistics
+- **FR-011.1**: The dashboard MUST require user authentication (email/password via Supabase)
+- **FR-011.2**: Users MUST only see services, routes, and metrics belonging to their own account
 - **FR-012**: Service cards MUST be expandable to show detailed route listings and dependency graphs
 - **FR-013**: The dashboard MUST render service-to-service connections as visual links between cards
 - **FR-014**: Users MUST be able to filter the visualization by service name, technology stack, or connection pattern
@@ -128,11 +142,13 @@ A developer wants to understand which services depend on which npm packages and 
 
 ### Key Entities
 
-- **Service**: Represents a deployed application or microservice. Attributes include unique identifier, name, version, programming language/framework, routes, dependencies, status (active/inactive), last-seen timestamp, deployment environment
-- **Route**: Represents an HTTP endpoint within a service. Attributes include HTTP method, path pattern, parameters, middleware chain, handler location, request/response schemas (if available)
-- **Dependency**: Represents an external package/library used by a service. Attributes include package name, version, size, license, security vulnerability status
-- **Connection**: Represents communication between two services. Attributes include source service, target service, endpoint path, request frequency, first-seen/last-seen timestamps, request/response patterns
+- **Service**: Represents a deployed application or microservice. Attributes include unique identifier, **user_id** (owner), name, version, programming language/framework, routes, dependencies, status (active/inactive), last-seen timestamp, deployment environment
+- **Route**: Represents an HTTP endpoint within a service. Attributes include HTTP method, path pattern, parameters, middleware chain, handler location, request/response schemas (if available). Belongs to a service (inherits user_id through foreign key)
+- **Dependency**: Represents an external package/library used by a service. Attributes include package name, version, size, license, security vulnerability status. Belongs to a service (inherits user_id through foreign key)
+- **Connection**: Represents communication between two services. Attributes include source service, target service, endpoint path, request frequency, first-seen/last-seen timestamps, request/response patterns. Computed from services owned by same user
 - **Plugin**: Represents a framework-specific analyzer. Attributes include name, supported framework, version, schema version compatibility
+- **User**: Represents an authenticated user account. Owns all services, API keys, and associated data. Authentication provided by Supabase Auth
+- **API Key**: Represents an authentication credential for service ingestion. Attributes include hashed key value, user_id (owner), name, revocation status, last used timestamp
 
 ## Success Criteria *(mandatory)*
 

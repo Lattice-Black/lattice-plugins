@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { HTTP_HEADERS } from '@lattice/core';
-import { env } from '../lib/env';
 import { supabase } from '../lib/supabase';
+import { createHash } from 'crypto';
 
 /**
  * Extended request type with user information
@@ -16,15 +16,21 @@ export interface AuthenticatedRequest extends Request {
 }
 
 /**
- * API key authentication middleware
+ * Hash API key for secure comparison
  */
-export const authenticateApiKey = (req: Request, res: Response, next: NextFunction): void => {
-  // Skip auth in development if no API key is set
-  if (env.NODE_ENV === 'development' && !env.LATTICE_API_KEY) {
-    next();
-    return;
-  }
+const hashApiKey = (key: string): string => {
+  return createHash('sha256').update(key).digest('hex');
+};
 
+/**
+ * API key authentication middleware
+ * Looks up API key in database and attaches user to request
+ */
+export const authenticateApiKey = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   const apiKey = req.header(HTTP_HEADERS.API_KEY);
 
   if (!apiKey) {
@@ -35,15 +41,59 @@ export const authenticateApiKey = (req: Request, res: Response, next: NextFuncti
     return;
   }
 
-  if (apiKey !== env.LATTICE_API_KEY) {
-    res.status(401).json({
-      error: 'Unauthorized',
-      message: 'Invalid API key',
-    });
-    return;
-  }
+  try {
+    // Hash the provided API key
+    const keyHash = hashApiKey(apiKey);
 
-  next();
+    // Look up API key in database
+    const { data: apiKeyRecord, error } = await supabase
+      .from('api_keys')
+      .select('id, user_id, revoked')
+      .eq('key_hash', keyHash)
+      .single();
+
+    if (error || !apiKeyRecord) {
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid API key',
+      });
+      return;
+    }
+
+    // Check if key has been revoked
+    if (apiKeyRecord.revoked) {
+      res.status(401).json({
+        error: 'Unauthorized',
+        message: 'API key has been revoked',
+      });
+      return;
+    }
+
+    // Update last_used timestamp asynchronously (don't wait for it)
+    void supabase
+      .from('api_keys')
+      .update({ last_used: new Date().toISOString() })
+      .eq('id', apiKeyRecord.id)
+      .then((result) => {
+        if (result.error) {
+          console.error('Failed to update API key last_used:', result.error);
+        }
+      });
+
+    // Attach user to request
+    (req as AuthenticatedRequest).user = {
+      id: apiKeyRecord.user_id,
+    };
+    (req as AuthenticatedRequest).authenticated = true;
+
+    next();
+  } catch (error) {
+    console.error('API key authentication error:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to authenticate API key',
+    });
+  }
 };
 
 /**
@@ -128,12 +178,33 @@ export const optionalSupabaseAuth = async (
 
 /**
  * Optional authentication - doesn't reject requests without auth
+ * DEPRECATED: Use authenticateSupabase or authenticateApiKey instead for multi-tenancy security
  */
-export const optionalAuth = (req: Request, _res: Response, next: NextFunction): void => {
+export const optionalAuth = async (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): Promise<void> => {
   const apiKey = req.header(HTTP_HEADERS.API_KEY);
 
-  if (apiKey === env.LATTICE_API_KEY) {
-    (req as AuthenticatedRequest).authenticated = true;
+  if (apiKey) {
+    try {
+      const keyHash = hashApiKey(apiKey);
+      const { data: apiKeyRecord } = await supabase
+        .from('api_keys')
+        .select('user_id, revoked')
+        .eq('key_hash', keyHash)
+        .single();
+
+      if (apiKeyRecord && !apiKeyRecord.revoked) {
+        (req as AuthenticatedRequest).user = {
+          id: apiKeyRecord.user_id,
+        };
+        (req as AuthenticatedRequest).authenticated = true;
+      }
+    } catch {
+      // Silently fail for optional auth
+    }
   }
 
   next();

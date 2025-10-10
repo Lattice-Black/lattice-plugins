@@ -1,6 +1,11 @@
-import Link from 'next/link'
+'use client';
+
+import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
 
 export function Header() {
+  const { user, signOut } = useAuth();
+
   return (
     <header className="border-b border-gray-800">
       <div className="container mx-auto px-6 py-6">
@@ -14,25 +19,41 @@ export function Header() {
                 LATTICE
               </h1>
             </Link>
-            <nav className="flex gap-6">
-              <Link
-                href="/"
-                className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
-              >
-                Services
-              </Link>
-              <Link
-                href="/graph"
-                className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
-              >
-                Network Graph
-              </Link>
-            </nav>
+            {user && (
+              <nav className="flex gap-6">
+                <Link
+                  href="/"
+                  className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
+                >
+                  Services
+                </Link>
+                <Link
+                  href="/graph"
+                  className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
+                >
+                  Network Graph
+                </Link>
+              </nav>
+            )}
           </div>
           <div className="flex items-center gap-4">
-            <div className="font-mono text-xs text-gray-500 uppercase tracking-wider">
-              Service Discovery Platform
-            </div>
+            {user ? (
+              <>
+                <span className="font-mono text-xs text-gray-400">
+                  {user.email}
+                </span>
+                <button
+                  onClick={() => void signOut()}
+                  className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <div className="font-mono text-xs text-gray-500 uppercase tracking-wider">
+                Service Discovery Platform
+              </div>
+            )}
           </div>
         </div>
       </div>

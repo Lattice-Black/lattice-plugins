@@ -1,9 +1,9 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { schemaValidator } from '@lattice/core';
 import { MetadataService } from '../services/metadata-service';
 import { RouteService } from '../services/route-service';
 import { DependencyService } from '../services/dependency-service';
-import { authenticateApiKey } from '../middleware/auth';
+import { authenticateApiKey, AuthenticatedRequest } from '../middleware/auth';
 
 /**
  * Ingestion routes for plugin metadata submission
@@ -17,9 +17,21 @@ export const createIngestRouter = (): Router => {
   /**
    * POST /ingest/metadata
    * Submit service metadata from plugins
+   * Requires API key authentication - associates services with authenticated user
    */
-  router.post('/metadata', authenticateApiKey, async (req: Request, res: Response) => {
+  router.post('/metadata', authenticateApiKey, async (req: AuthenticatedRequest, res: Response) => {
     try {
+      // Ensure user is authenticated
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User authentication required',
+        });
+        return;
+      }
+
+      const userId = req.user.id;
+
       // Validate request body
       const validationResult = schemaValidator.validateServiceMetadata(req.body);
 
@@ -34,8 +46,8 @@ export const createIngestRouter = (): Router => {
 
       const { service, routes = [], dependencies = [] } = validationResult.data!;
 
-      // Upsert service
-      const upsertedService = await metadataService.upsertService(service);
+      // Upsert service with user association
+      const upsertedService = await metadataService.upsertService(service, userId);
 
       // Upsert routes
       const routesProcessed = await routeService.upsertRoutes(

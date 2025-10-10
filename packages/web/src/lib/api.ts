@@ -6,8 +6,25 @@ import type {
   MetricsStatsResponse,
   MetricsConnectionsResponse
 } from '@/types'
+import { getSessionToken } from './supabase'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
+
+/**
+ * Get headers with authentication token
+ */
+async function getAuthHeaders(): Promise<HeadersInit> {
+  const token = await getSessionToken()
+
+  if (!token) {
+    throw new Error('Authentication required. Please sign in.')
+  }
+
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  }
+}
 
 export async function fetchServices(params?: {
   status?: string
@@ -26,7 +43,9 @@ export async function fetchServices(params?: {
 
   const url = `${API_BASE_URL}/services${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
 
+  const headers = await getAuthHeaders()
   const response = await fetch(url, {
+    headers,
     cache: 'no-store', // Always fetch fresh data for service discovery
   })
 
@@ -40,7 +59,9 @@ export async function fetchServices(params?: {
 export async function fetchServiceById(id: string): Promise<ServiceDetailResponse> {
   const url = `${API_BASE_URL}/services/${id}`
 
+  const headers = await getAuthHeaders()
   const response = await fetch(url, {
+    headers,
     cache: 'no-store',
   })
 
@@ -54,7 +75,9 @@ export async function fetchServiceById(id: string): Promise<ServiceDetailRespons
 export async function fetchMetricsStats(serviceId?: string): Promise<ServiceMetricsStat[]> {
   const url = `${API_BASE_URL}/metrics/stats${serviceId ? `?serviceId=${serviceId}` : ''}`
 
+  const headers = await getAuthHeaders()
   const response = await fetch(url, {
+    headers,
     cache: 'no-store',
   })
 
@@ -69,7 +92,9 @@ export async function fetchMetricsStats(serviceId?: string): Promise<ServiceMetr
 export async function fetchMetricsConnections(): Promise<ServiceConnection[]> {
   const url = `${API_BASE_URL}/metrics/connections`
 
+  const headers = await getAuthHeaders()
   const response = await fetch(url, {
+    headers,
     cache: 'no-store',
   })
 

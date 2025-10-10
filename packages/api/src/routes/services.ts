@@ -1,9 +1,10 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { MetadataService } from '../services/metadata-service';
-import { optionalAuth } from '../middleware/auth';
+import { authenticateSupabase, AuthenticatedRequest } from '../middleware/auth';
 
 /**
  * Service query routes for dashboard
+ * All routes require authentication and filter by user_id
  */
 export const createServicesRouter = (): Router => {
   const router = Router();
@@ -11,16 +12,26 @@ export const createServicesRouter = (): Router => {
 
   /**
    * GET /services
-   * List all services with optional filtering
+   * List all services with optional filtering (user-scoped)
+   * Requires Supabase JWT authentication
    */
-  router.get('/', optionalAuth, async (req: Request, res: Response) => {
+  router.get('/', authenticateSupabase, async (req: AuthenticatedRequest, res: Response) => {
     try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User authentication required',
+        });
+        return;
+      }
+
+      const userId = req.user.id;
       const { status, environment, framework, limit, offset } = req.query;
 
       const parsedLimit = limit ? parseInt(limit as string, 10) : undefined;
       const parsedOffset = offset ? parseInt(offset as string, 10) : undefined;
 
-      const result = await metadataService.listServices({
+      const result = await metadataService.listServices(userId, {
         status: status as string | undefined,
         environment: environment as string | undefined,
         framework: framework as string | undefined,
@@ -45,10 +56,20 @@ export const createServicesRouter = (): Router => {
 
   /**
    * GET /services/:id
-   * Get service details by ID or name
+   * Get service details by ID or name (user-scoped)
+   * Requires Supabase JWT authentication
    */
-  router.get('/:id', optionalAuth, async (req: Request, res: Response) => {
+  router.get('/:id', authenticateSupabase, async (req: AuthenticatedRequest, res: Response) => {
     try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User authentication required',
+        });
+        return;
+      }
+
+      const userId = req.user.id;
       const { id } = req.params;
 
       if (!id) {
@@ -59,11 +80,11 @@ export const createServicesRouter = (): Router => {
         return;
       }
 
-      // Try to find by ID first, then by name
-      let service = await metadataService.getServiceById(id);
+      // Try to find by ID first, then by name (both user-scoped)
+      let service = await metadataService.getServiceById(id, userId);
 
       if (!service) {
-        service = await metadataService.getServiceByName(id);
+        service = await metadataService.getServiceByName(id, userId);
       }
 
       if (!service) {

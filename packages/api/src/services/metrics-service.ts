@@ -17,12 +17,12 @@ export interface MetricData {
  */
 export class MetricsService {
   /**
-   * Insert metrics for a service
+   * Insert metrics for a service (user-scoped)
    */
-  async insertMetrics(serviceName: string, metrics: MetricData[]): Promise<number> {
-    // First, get the service ID from the service name
-    const serviceQuery = `SELECT id FROM services WHERE name = $1`;
-    const serviceResult = await pool.query(serviceQuery, [serviceName]);
+  async insertMetrics(serviceName: string, userId: string, metrics: MetricData[]): Promise<number> {
+    // First, get the service ID from the service name (user-scoped)
+    const serviceQuery = `SELECT id FROM services WHERE name = $1 AND user_id = $2`;
+    const serviceResult = await pool.query(serviceQuery, [serviceName, userId]);
 
     if (serviceResult.rows.length === 0) {
       throw new Error(`Service not found: ${serviceName}`);
@@ -70,14 +70,14 @@ export class MetricsService {
   }
 
   /**
-   * Get service statistics
+   * Get service statistics (user-scoped)
    */
-  async getServiceStats(serviceId?: string) {
-    let query = `SELECT * FROM service_stats`;
-    const params: string[] = [];
+  async getServiceStats(userId: string, serviceId?: string) {
+    let query = `SELECT * FROM service_stats WHERE user_id = $1`;
+    const params: (string | undefined)[] = [userId];
 
     if (serviceId) {
-      query += ` WHERE id = $1`;
+      query += ` AND id = $2`;
       params.push(serviceId);
     }
 
@@ -86,28 +86,28 @@ export class MetricsService {
   }
 
   /**
-   * Get inter-service connection statistics
+   * Get inter-service connection statistics (user-scoped)
    */
-  async getServiceConnections() {
-    const query = `SELECT * FROM service_connections_view`;
-    const result = await pool.query(query);
+  async getServiceConnections(userId: string) {
+    const query = `SELECT * FROM service_connections_view WHERE user_id = $1`;
+    const result = await pool.query(query, [userId]);
     return result.rows;
   }
 
   /**
-   * Get recent metrics for a service
+   * Get recent metrics for a service (user-scoped)
    */
-  async getRecentMetrics(serviceName: string, limit: number = 100) {
+  async getRecentMetrics(serviceName: string, userId: string, limit: number = 100) {
     const query = `
       SELECT m.*
       FROM service_metrics m
       JOIN services s ON s.id = m.service_id
-      WHERE s.name = $1
+      WHERE s.name = $1 AND s.user_id = $2
       ORDER BY m.timestamp DESC
-      LIMIT $2
+      LIMIT $3
     `;
 
-    const result = await pool.query(query, [serviceName, limit]);
+    const result = await pool.query(query, [serviceName, userId, limit]);
     return result.rows;
   }
 }

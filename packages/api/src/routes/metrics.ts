@@ -1,9 +1,10 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { MetricsService } from '../services/metrics-service';
-import { authenticateApiKey } from '../middleware/auth';
+import { authenticateApiKey, authenticateSupabase, AuthenticatedRequest } from '../middleware/auth';
 
 /**
  * Metrics routes for runtime statistics
+ * All routes require authentication and are user-scoped
  */
 export const createMetricsRouter = (): Router => {
   const router = Router();
@@ -12,9 +13,19 @@ export const createMetricsRouter = (): Router => {
   /**
    * POST /metrics
    * Submit runtime metrics from services
+   * Requires API key authentication - metrics are associated with the authenticated user
    */
-  router.post('/', async (req: Request, res: Response) => {
+  router.post('/', authenticateApiKey, async (req: AuthenticatedRequest, res: Response) => {
     try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User authentication required',
+        });
+        return;
+      }
+
+      const userId = req.user.id;
       const { serviceName, metrics } = req.body;
 
       if (!serviceName) {
@@ -44,7 +55,7 @@ export const createMetricsRouter = (): Router => {
         }
       }
 
-      const insertedCount = await metricsService.insertMetrics(serviceName, metrics);
+      const insertedCount = await metricsService.insertMetrics(serviceName, userId, metrics);
 
       res.status(200).json({
         success: true,
@@ -70,12 +81,22 @@ export const createMetricsRouter = (): Router => {
 
   /**
    * GET /metrics/stats
-   * Get aggregated service statistics
+   * Get aggregated service statistics (user-scoped)
+   * Requires Supabase JWT authentication
    */
-  router.get('/stats', authenticateApiKey, async (req: Request, res: Response) => {
+  router.get('/stats', authenticateSupabase, async (req: AuthenticatedRequest, res: Response) => {
     try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User authentication required',
+        });
+        return;
+      }
+
+      const userId = req.user.id;
       const { serviceId } = req.query;
-      const stats = await metricsService.getServiceStats(serviceId as string | undefined);
+      const stats = await metricsService.getServiceStats(userId, serviceId as string | undefined);
 
       res.status(200).json({
         success: true,
@@ -92,11 +113,21 @@ export const createMetricsRouter = (): Router => {
 
   /**
    * GET /metrics/connections
-   * Get inter-service connection statistics
+   * Get inter-service connection statistics (user-scoped)
+   * Requires Supabase JWT authentication
    */
-  router.get('/connections', authenticateApiKey, async (_req: Request, res: Response) => {
+  router.get('/connections', authenticateSupabase, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const connections = await metricsService.getServiceConnections();
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User authentication required',
+        });
+        return;
+      }
+
+      const userId = req.user.id;
+      const connections = await metricsService.getServiceConnections(userId);
 
       res.status(200).json({
         success: true,
@@ -113,10 +144,20 @@ export const createMetricsRouter = (): Router => {
 
   /**
    * GET /metrics/recent/:serviceName
-   * Get recent metrics for a specific service
+   * Get recent metrics for a specific service (user-scoped)
+   * Requires Supabase JWT authentication
    */
-  router.get('/recent/:serviceName', authenticateApiKey, async (req: Request, res: Response) => {
+  router.get('/recent/:serviceName', authenticateSupabase, async (req: AuthenticatedRequest, res: Response) => {
     try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User authentication required',
+        });
+        return;
+      }
+
+      const userId = req.user.id;
       const { serviceName } = req.params;
       const { limit } = req.query;
 
@@ -131,6 +172,7 @@ export const createMetricsRouter = (): Router => {
       const limitNum = limit ? parseInt(limit as string) : 100;
       const metrics = await metricsService.getRecentMetrics(
         serviceName,
+        userId,
         limitNum
       );
 
