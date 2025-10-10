@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["nodejs-22_x", "yarn"]
+
+[phases.install]
+cmds = ["yarn install"]
+
+[phases.build]
+cmds = [
+  "yarn workspace @lattice/core build",
+  "yarn workspace @lattice/api build"
+]
+
+[start]
+cmd = "node packages/api/dist/index.js"
