@@ -69,30 +69,35 @@ export class RouteService {
     method?: string;
     serviceId?: string;
   }) {
-    const where: Record<string, unknown> = {};
+    const client = await pool.connect();
+    try {
+      let query = `
+        SELECT r.*, s.id as service_id, s.name as service_name
+        FROM routes r
+        JOIN services s ON r.service_id = s.id
+        WHERE 1=1
+      `;
+      const values: unknown[] = [];
 
-    if (filters?.path) {
-      where['path'] = { contains: filters.path };
+      if (filters?.path) {
+        values.push(`%${filters.path}%`);
+        query += ` AND r.path ILIKE $${values.length}`;
+      }
+
+      if (filters?.method) {
+        values.push(filters.method);
+        query += ` AND r.method = $${values.length}`;
+      }
+
+      if (filters?.serviceId) {
+        values.push(filters.serviceId);
+        query += ` AND r.service_id = $${values.length}`;
+      }
+
+      const result = await client.query(query, values);
+      return result.rows;
+    } finally {
+      client.release();
     }
-
-    if (filters?.method) {
-      where['method'] = filters.method;
-    }
-
-    if (filters?.serviceId) {
-      where['serviceId'] = filters.serviceId;
-    }
-
-    return prisma.route.findMany({
-      where,
-      include: {
-        service: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
   }
 }

@@ -70,26 +70,30 @@ export class DependencyService {
     packageName?: string;
     hasVulnerabilities?: boolean;
   }) {
-    const where: Record<string, unknown> = {};
+    const client = await pool.connect();
+    try {
+      let query = `
+        SELECT d.*, s.id as service_id, s.name as service_name
+        FROM dependencies d
+        JOIN services s ON d.service_id = s.id
+        WHERE 1=1
+      `;
+      const values: unknown[] = [];
 
-    if (filters?.packageName) {
-      where['packageName'] = { contains: filters.packageName };
+      if (filters?.packageName) {
+        values.push(`%${filters.packageName}%`);
+        query += ` AND d.package_name ILIKE $${values.length}`;
+      }
+
+      if (filters?.hasVulnerabilities !== undefined) {
+        values.push(filters.hasVulnerabilities);
+        query += ` AND d.has_vulnerabilities = $${values.length}`;
+      }
+
+      const result = await client.query(query, values);
+      return result.rows;
+    } finally {
+      client.release();
     }
-
-    if (filters?.hasVulnerabilities !== undefined) {
-      where['hasVulnerabilities'] = filters.hasVulnerabilities;
-    }
-
-    return prisma.dependency.findMany({
-      where,
-      include: {
-        service: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-    });
   }
 }

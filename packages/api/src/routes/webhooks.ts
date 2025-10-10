@@ -72,7 +72,7 @@ export const createWebhooksRouter = (): Router => {
               const subscription = await stripe.subscriptions.retrieve(
                 session.subscription as string
               );
-              const userId = session.metadata?.userId;
+              const userId = session.metadata?.['userId'];
 
               if (userId) {
                 await paymentService.updateSubscriptionFromWebhook(
@@ -94,10 +94,10 @@ export const createWebhooksRouter = (): Router => {
               subscription.customer as string
             );
 
-            if ('metadata' in customer && customer.metadata?.userId) {
+            if ('metadata' in customer && customer.metadata?.['userId']) {
               await paymentService.updateSubscriptionFromWebhook(
                 subscription,
-                customer.metadata.userId
+                customer.metadata['userId']
               );
             }
             break;
@@ -112,10 +112,10 @@ export const createWebhooksRouter = (): Router => {
               subscription.customer as string
             );
 
-            if ('metadata' in customer && customer.metadata?.userId) {
+            if ('metadata' in customer && customer.metadata?.['userId']) {
               await paymentService.updateSubscriptionFromWebhook(
                 subscription,
-                customer.metadata.userId
+                customer.metadata['userId']
               );
             }
             break;

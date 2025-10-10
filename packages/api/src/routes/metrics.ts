@@ -94,7 +94,7 @@ export const createMetricsRouter = (): Router => {
    * GET /metrics/connections
    * Get inter-service connection statistics
    */
-  router.get('/connections', authenticateApiKey, async (req: Request, res: Response) => {
+  router.get('/connections', authenticateApiKey, async (_req: Request, res: Response) => {
     try {
       const connections = await metricsService.getServiceConnections();
 
@@ -120,9 +120,18 @@ export const createMetricsRouter = (): Router => {
       const { serviceName } = req.params;
       const { limit } = req.query;
 
+      if (!serviceName) {
+        res.status(400).json({
+          error: 'Bad Request',
+          message: 'serviceName is required',
+        });
+        return;
+      }
+
+      const limitNum = limit ? parseInt(limit as string) : 100;
       const metrics = await metricsService.getRecentMetrics(
         serviceName,
-        limit ? parseInt(limit as string) : 100
+        limitNum
       );
 
       res.status(200).json({
