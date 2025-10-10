@@ -6,6 +6,9 @@ import { formatDate, getRelativeTime } from '@/lib/utils'
 import { LoadingSpinner } from '@/components/Loading'
 import type { Route, Dependency } from '@/types'
 
+
+// Force dynamic rendering - authentication required
+export const dynamic = 'force-dynamic'
 interface ServiceDetailPageProps {
   params: {
     id: string

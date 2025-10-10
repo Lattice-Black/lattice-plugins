@@ -4,6 +4,9 @@ import { ServiceCard } from '@/components/ServiceCard'
 import { LoadingGrid } from '@/components/Loading'
 import { fetchServices } from '@/lib/api'
 
+
+// Force dynamic rendering - authentication required
+export const dynamic = 'force-dynamic'
 async function ServiceGrid() {
   const data = await fetchServices({ limit: 50 })
 

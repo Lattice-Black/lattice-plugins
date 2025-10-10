@@ -4,6 +4,9 @@ import { fetchServices } from '@/lib/api'
 import { NetworkGraph } from '@/components/NetworkGraph'
 import { LoadingSpinner } from '@/components/Loading'
 
+// Force dynamic rendering - authentication required
+export const dynamic = 'force-dynamic'
+
 async function GraphView() {
   const data = await fetchServices({ limit: 50 })
 

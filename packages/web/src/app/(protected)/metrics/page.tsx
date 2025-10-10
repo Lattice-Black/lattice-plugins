@@ -3,6 +3,9 @@ import { fetchMetricsStats, fetchMetricsConnections } from '@/lib/api'
 import type { ServiceMetricsStat, ServiceConnection } from '@/types'
 import Link from 'next/link'
 
+
+// Force dynamic rendering - authentication required
+export const dynamic = 'force-dynamic'
 async function MetricsStatsGrid() {
   const stats: ServiceMetricsStat[] = await fetchMetricsStats()
 
