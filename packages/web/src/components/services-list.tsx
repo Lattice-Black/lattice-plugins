@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ServiceCard } from '@/components/ServiceCard';
 import { LoadingGrid } from '@/components/Loading';
-import { fetchServices } from '@/lib/api';
+import { fetchServices } from '@/lib/client-api';
 import type { Service } from '@/types';
 
 export function ServicesList() {
