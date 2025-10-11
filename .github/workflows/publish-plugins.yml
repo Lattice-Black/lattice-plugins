@@ -32,6 +32,11 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      - name: Build core package (dependency)
+        run: |
+          cd packages/core
+          yarn build
+
       - name: Build plugin-express
         run: |
           cd packages/plugin-express
