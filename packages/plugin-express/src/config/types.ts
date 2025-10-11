@@ -1,4 +1,4 @@
-import { ServiceMetadataSubmission } from '@lattice/core';
+import { ServiceMetadataSubmission } from '@caryyon/core';
 
 /**
  * Lattice plugin configuration interface

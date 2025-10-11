@@ -1,4 +1,4 @@
-import { ServiceMetadataSubmission, HTTP_HEADERS, API_ENDPOINTS } from '@lattice/core';
+import { ServiceMetadataSubmission, HTTP_HEADERS, API_ENDPOINTS } from '@caryyon/core';
 import { SubmissionResponse } from '../config/types';
 
 /**

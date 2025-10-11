@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { schemaValidator } from '@lattice/core';
+import { schemaValidator } from '@caryyon/core';
 import { MetadataService } from '../services/metadata-service';
 import { RouteService } from '../services/route-service';
 import { DependencyService } from '../services/dependency-service';

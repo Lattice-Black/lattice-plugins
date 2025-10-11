@@ -1,5 +1,5 @@
 /**
- * @lattice/core
+ * @caryyon/core
  * Core types, validators, and utilities for Lattice service discovery
  */
 

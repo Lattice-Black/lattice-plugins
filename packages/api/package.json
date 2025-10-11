@@ -22,7 +22,7 @@
     "stripe:test:payment": "stripe trigger invoice.payment_succeeded"
   },
   "dependencies": {
-    "@lattice/core": "*",
+    "@caryyon/core": "*",
     "@prisma/client": "^5.7.0",
     "@supabase/supabase-js": "^2.75.0",
     "cors": "^2.8.5",

@@ -10,7 +10,7 @@ import {
   HttpMethod,
   DependencyType,
   generateId,
-} from '@lattice/core';
+} from '@caryyon/core';
 
 export interface LatticeNextConfig {
   serviceName: string;

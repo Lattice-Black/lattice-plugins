@@ -1,6 +1,6 @@
 import { Application } from 'express';
 import listEndpoints from 'express-list-endpoints';
-import { Route, HttpMethod, generateId } from '@lattice/core';
+import { Route, HttpMethod, generateId } from '@caryyon/core';
 
 /**
  * Route analyzer for Express applications

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { HTTP_HEADERS } from '@lattice/core';
+import { HTTP_HEADERS } from '@caryyon/core';
 import { supabase } from '../lib/supabase';
 import { createHash } from 'crypto';
 

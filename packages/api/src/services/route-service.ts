@@ -1,5 +1,5 @@
 import { pool } from '../lib/db';
-import { Route } from '@lattice/core';
+import { Route } from '@caryyon/core';
 
 /**
  * Service for managing routes
