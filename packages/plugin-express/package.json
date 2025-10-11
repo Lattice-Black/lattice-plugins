@@ -40,6 +40,12 @@
     "README.md"
   ],
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Caryyon/lattice.git",
+    "directory": "packages/plugin-express"
   }
 }
