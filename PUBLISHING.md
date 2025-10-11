@@ -1,6 +1,6 @@
 # Publishing Plugins to GitHub Packages
 
-This guide explains how to publish the Lattice plugins (`@lattice/plugin-express` and `@lattice/plugin-nextjs`) to GitHub Packages.
+This guide explains how to publish the Lattice plugins (`@caryyon/plugin-express` and `@caryyon/plugin-nextjs`) to GitHub Packages.
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ This guide explains how to publish the Lattice plugins (`@lattice/plugin-express
 The plugins are already configured for GitHub Packages:
 
 - **package.json**: Both plugins have `publishConfig` pointing to GitHub Packages registry
-- **.npmrc**: Root-level configuration routes `@lattice` scope to GitHub Packages
+- **.npmrc**: Root-level configuration routes `@caryyon` scope to GitHub Packages
 - **GitHub Actions**: Automated workflow for publishing on tag push
 
 ## Publishing Methods
@@ -83,12 +83,12 @@ The plugins are already configured for GitHub Packages:
 Users can install the published plugins:
 
 ```bash
-# Configure npm to use GitHub Packages for @lattice scope
-echo "@lattice:registry=https://npm.pkg.github.com" >> .npmrc
+# Configure npm to use GitHub Packages for @caryyon scope
+echo "@caryyon:registry=https://npm.pkg.github.com" >> .npmrc
 
 # Install plugins
-yarn add @lattice/plugin-express
-yarn add @lattice/plugin-nextjs
+yarn add @caryyon/plugin-express
+yarn add @caryyon/plugin-nextjs
 ```
 
 For private packages, users need to authenticate:
@@ -117,4 +117,4 @@ Follow semantic versioning (semver):
 ### Package Not Found After Publishing
 - Wait a few minutes for GitHub Packages to index
 - Verify package visibility settings on GitHub
-- Check that package name matches `@lattice/plugin-*` format
+- Check that package name matches `@caryyon/plugin-*` format

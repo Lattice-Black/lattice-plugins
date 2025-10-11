@@ -1,5 +1,5 @@
 {
-  "name": "@lattice/plugin-nextjs",
+  "name": "@caryyon/plugin-nextjs",
   "version": "0.1.0",
   "description": "Lattice service discovery plugin for Next.js applications",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
     "api-discovery"
   ],
   "dependencies": {
-    "@lattice/core": "*",
+    "@caryyon/core": "*",
     "glob": "^10.3.10"
   },
   "devDependencies": {

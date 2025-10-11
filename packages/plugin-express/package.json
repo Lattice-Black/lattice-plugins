@@ -1,5 +1,5 @@
 {
-  "name": "@lattice/plugin-express",
+  "name": "@caryyon/plugin-express",
   "version": "0.1.0",
   "description": "Lattice plugin for Express.js service discovery",
   "main": "dist/index.js",
@@ -13,7 +13,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@lattice/core": "*",
+    "@caryyon/core": "*",
     "express-list-endpoints": "^6.0.0",
     "fast-glob": "^3.3.2"
   },

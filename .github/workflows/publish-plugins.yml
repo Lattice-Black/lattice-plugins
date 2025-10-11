@@ -51,7 +51,7 @@ jobs:
         run: |
           cd packages/plugin-express
           echo "//npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
-          echo "@lattice:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "@caryyon:registry=https://npm.pkg.github.com" >> .npmrc
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -60,7 +60,7 @@ jobs:
         run: |
           cd packages/plugin-nextjs
           echo "//npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
-          echo "@lattice:registry=https://npm.pkg.github.com" >> .npmrc
+          echo "@caryyon:registry=https://npm.pkg.github.com" >> .npmrc
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
