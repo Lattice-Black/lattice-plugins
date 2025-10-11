@@ -3,7 +3,7 @@ import { schemaValidator } from '@lattice/core';
 import { MetadataService } from '../services/metadata-service';
 import { RouteService } from '../services/route-service';
 import { DependencyService } from '../services/dependency-service';
-import { authenticateApiKey, optionalAuth, AuthenticatedRequest } from '../middleware/auth';
+import { optionalAuth, AuthenticatedRequest } from '../middleware/auth';
 
 /**
  * Ingestion routes for plugin metadata submission
