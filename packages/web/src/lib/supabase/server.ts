@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
  * Server Supabase client for Server Components and Server Actions
  * Reads session from cookies
  */
-export async function createClient() {
+export function createClient() {
   const cookieStore = cookies();
 
   return createServerClient(
