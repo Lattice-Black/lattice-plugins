@@ -152,37 +152,39 @@ async function ServiceDetails({ id }: { id: string }) {
       </div>
 
       {/* Discovery Info */}
-      <div className="border border-gray-800 bg-black/50 backdrop-blur-sm p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">
-          Discovery Information
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-2">
-              Plugin Name
+      {service.discoveredBy && (
+        <div className="border border-gray-800 bg-black/50 backdrop-blur-sm p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">
+            Discovery Information
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-2">
+                Plugin Name
+              </div>
+              <div className="font-mono text-sm text-white">
+                {service.discoveredBy.pluginName}
+              </div>
             </div>
-            <div className="font-mono text-sm text-white">
-              {service.discoveredBy.pluginName}
+            <div>
+              <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-2">
+                Plugin Version
+              </div>
+              <div className="font-mono text-sm text-white">
+                {service.discoveredBy.pluginVersion}
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-2">
-              Plugin Version
-            </div>
-            <div className="font-mono text-sm text-white">
-              {service.discoveredBy.pluginVersion}
-            </div>
-          </div>
-          <div>
-            <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-2">
-              Schema Version
-            </div>
-            <div className="font-mono text-sm text-white">
-              {service.discoveredBy.schemaVersion}
+            <div>
+              <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-2">
+                Schema Version
+              </div>
+              <div className="font-mono text-sm text-white">
+                {service.discoveredBy.schemaVersion}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Routes Section */}
       {routes.length > 0 && (

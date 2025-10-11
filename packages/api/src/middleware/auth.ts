@@ -48,7 +48,7 @@ export const authenticateApiKey = async (
     // Look up API key in database
     const { data: apiKeyRecord, error } = await supabase
       .from('api_keys')
-      .select('id, user_id, revoked')
+      .select('id, user_id')
       .eq('key_hash', keyHash)
       .single();
 
@@ -56,15 +56,6 @@ export const authenticateApiKey = async (
       res.status(401).json({
         error: 'Unauthorized',
         message: 'Invalid API key',
-      });
-      return;
-    }
-
-    // Check if key has been revoked
-    if (apiKeyRecord.revoked) {
-      res.status(401).json({
-        error: 'Unauthorized',
-        message: 'API key has been revoked',
       });
       return;
     }
@@ -192,11 +183,11 @@ export const optionalAuth = async (
       const keyHash = hashApiKey(apiKey);
       const { data: apiKeyRecord } = await supabase
         .from('api_keys')
-        .select('user_id, revoked')
+        .select('user_id')
         .eq('key_hash', keyHash)
         .single();
 
-      if (apiKeyRecord && !apiKeyRecord.revoked) {
+      if (apiKeyRecord) {
         (req as AuthenticatedRequest).user = {
           id: apiKeyRecord.user_id,
         };

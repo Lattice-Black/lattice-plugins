@@ -6,7 +6,7 @@ import type {
   MetricsStatsResponse,
   MetricsConnectionsResponse
 } from '@/types'
-import { getSessionToken } from './supabase'
+import { getSessionToken } from './supabase/server-utils'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 

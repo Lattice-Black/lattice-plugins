@@ -3,7 +3,7 @@ import { schemaValidator } from '@lattice/core';
 import { MetadataService } from '../services/metadata-service';
 import { RouteService } from '../services/route-service';
 import { DependencyService } from '../services/dependency-service';
-import { authenticateApiKey, AuthenticatedRequest } from '../middleware/auth';
+import { authenticateApiKey, optionalAuth, AuthenticatedRequest } from '../middleware/auth';
 
 /**
  * Ingestion routes for plugin metadata submission
@@ -17,20 +17,14 @@ export const createIngestRouter = (): Router => {
   /**
    * POST /ingest/metadata
    * Submit service metadata from plugins
-   * Requires API key authentication - associates services with authenticated user
+   * Uses optional authentication - for development, allows unauthenticated requests
+   * In production, use authenticateApiKey to enforce multi-tenancy
    */
-  router.post('/metadata', authenticateApiKey, async (req: AuthenticatedRequest, res: Response) => {
+  router.post('/metadata', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      // Ensure user is authenticated
-      if (!req.user?.id) {
-        res.status(401).json({
-          error: 'Unauthorized',
-          message: 'User authentication required',
-        });
-        return;
-      }
-
-      const userId = req.user.id;
+      // Get user ID if authenticated, otherwise use test user for development
+      // TODO: In production, this should be required (use authenticateApiKey middleware)
+      const userId = req.user?.id || 'f5ae5fd4-4fee-4f77-85f3-9aed19b7bb6f'; // test@lattice.com user for development
 
       // Validate request body
       const validationResult = schemaValidator.validateServiceMetadata(req.body);

@@ -14,7 +14,7 @@ export interface Service {
   status: ServiceStatus;
   firstSeen: Date | string;
   lastSeen: Date | string;
-  discoveredBy: {
+  discoveredBy?: {
     pluginName: string;
     pluginVersion: string;
     schemaVersion: string;
@@ -154,7 +154,7 @@ export interface ServiceDetailResponse {
   status: ServiceStatus;
   firstSeen: Date | string;
   lastSeen: Date | string;
-  discoveredBy: {
+  discoveredBy?: {
     pluginName: string;
     pluginVersion: string;
     schemaVersion: string;
