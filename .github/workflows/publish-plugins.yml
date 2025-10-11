@@ -17,6 +17,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -27,7 +28,6 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@lattice'
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -50,6 +50,8 @@ jobs:
       - name: Publish plugin-express
         run: |
           cd packages/plugin-express
+          echo "//npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
+          echo "@lattice:registry=https://npm.pkg.github.com" >> .npmrc
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -57,6 +59,8 @@ jobs:
       - name: Publish plugin-nextjs
         run: |
           cd packages/plugin-nextjs
+          echo "//npm.pkg.github.com/:_authToken=$NODE_AUTH_TOKEN" > .npmrc
+          echo "@lattice:registry=https://npm.pkg.github.com" >> .npmrc
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
