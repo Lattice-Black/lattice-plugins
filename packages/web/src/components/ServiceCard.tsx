@@ -16,7 +16,7 @@ export function ServiceCard({ service, routeCount = 0, dependencyCount = 0 }: Se
   }[service.status]
 
   return (
-    <Link href={`/services/${service.id}`}>
+    <Link href={`/dashboard/services/${service.id}`}>
       <div className="group border border-gray-800 hover:border-gray-600 transition-all duration-200 bg-black/50 backdrop-blur-sm">
         <div className="p-6">
           {/* Header */}

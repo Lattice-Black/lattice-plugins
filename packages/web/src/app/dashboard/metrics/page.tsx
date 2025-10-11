@@ -164,13 +164,13 @@ export default function MetricsPage() {
           </div>
           <div className="flex gap-2">
             <Link
-              href="/"
+              href="/dashboard"
               className="px-4 py-2 border border-gray-800 text-sm text-gray-400 hover:text-white hover:border-gray-700 transition-colors font-mono"
             >
               Services
             </Link>
             <Link
-              href="/graph"
+              href="/dashboard/graph"
               className="px-4 py-2 border border-gray-800 text-sm text-gray-400 hover:text-white hover:border-gray-700 transition-colors font-mono"
             >
               Network Graph

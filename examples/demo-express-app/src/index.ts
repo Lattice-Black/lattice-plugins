@@ -1,12 +1,38 @@
 import express from 'express';
-import { LatticePlugin } from '@lattice/plugin-express';
+import { LatticePlugin } from '@caryyon/plugin-express';
 
 const app = express();
 
 // Middleware
 app.use(express.json());
 
-// Note: Metrics middleware will be added after Lattice is initialized
+// Initialize Lattice plugin EARLY so metrics middleware can intercept all routes
+const lattice = new LatticePlugin({
+  serviceName: 'demo-express-app',
+  environment: 'development',
+  apiEndpoint: 'http://localhost:3000/api/v1',
+  apiKey: 'lattice_584d027d755c2d7a79c2fb84d9274fc9ec961d78742b902c',
+  enabled: true,
+  autoSubmit: true,
+  onAnalyzed: (metadata) => {
+    console.log(`\n✅ Lattice analyzed service: ${metadata.service.name}`);
+    console.log(`   - Routes discovered: ${metadata.routes?.length || 0}`);
+    console.log(`   - Dependencies discovered: ${metadata.dependencies?.length || 0}`);
+  },
+  onSubmitted: (response) => {
+    console.log(`\n✅ Lattice metadata submitted successfully!`);
+    console.log(`   - Service ID: ${response.serviceId}`);
+    console.log(`   - Routes processed: ${response.routesProcessed}`);
+    console.log(`   - Dependencies processed: ${response.dependenciesProcessed}`);
+  },
+  onError: (error) => {
+    console.error(`\n❌ Lattice error:`, error.message);
+  },
+});
+
+// Add metrics middleware BEFORE routes so it intercepts all requests
+app.use(lattice.createMetricsMiddleware());
+console.log('📊 Metrics tracking middleware installed');
 
 // Sample routes
 app.get('/', (req, res) => {
@@ -61,37 +87,10 @@ app.get('/posts/:id', (req, res) => {
   res.json({ id: req.params.id, title: 'Post Title' });
 });
 
-// Initialize Lattice plugin (AFTER all routes are defined)
-const lattice = new LatticePlugin({
-  serviceName: 'demo-express-app',
-  environment: 'development',
-  apiEndpoint: 'http://localhost:3000/api/v1',
-  enabled: true,
-  autoSubmit: true,
-  onAnalyzed: (metadata) => {
-    console.log(`\n✅ Lattice analyzed service: ${metadata.service.name}`);
-    console.log(`   - Routes discovered: ${metadata.routes?.length || 0}`);
-    console.log(`   - Dependencies discovered: ${metadata.dependencies?.length || 0}`);
-  },
-  onSubmitted: (response) => {
-    console.log(`\n✅ Lattice metadata submitted successfully!`);
-    console.log(`   - Service ID: ${response.serviceId}`);
-    console.log(`   - Routes processed: ${response.routesProcessed}`);
-    console.log(`   - Dependencies processed: ${response.dependenciesProcessed}`);
-  },
-  onError: (error) => {
-    console.error(`\n❌ Lattice error:`, error.message);
-  },
-});
-
-// Analyze the app
+// Analyze the app and start server
 (async () => {
   try {
     await lattice.analyze(app);
-
-    // Add metrics middleware after analyzing
-    app.use(lattice.createMetricsMiddleware());
-    console.log('📊 Metrics tracking enabled');
 
     // Start server
     const PORT = 3001;

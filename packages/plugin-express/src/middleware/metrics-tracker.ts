@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { HTTP_HEADERS } from '@caryyon/core';
 
 export interface RequestMetrics {
   method: string;
@@ -13,11 +14,17 @@ export class MetricsTracker {
   private metrics: RequestMetrics[] = [];
   private maxMetrics = 1000; // Keep last 1000 requests
 
-  constructor(private serviceName: string, private apiEndpoint: string) {}
+  constructor(
+    private serviceName: string,
+    private apiEndpoint: string,
+    private apiKey: string
+  ) {}
 
   middleware() {
     const self = this;
+    console.log('[MetricsTracker] middleware() called - returning handler function');
     return (req: Request, res: Response, next: NextFunction) => {
+      console.log(`[MetricsTracker] MIDDLEWARE INVOKED: ${req.method} ${req.path}`);
       const startTime = Date.now();
 
       // Capture the original end function
@@ -52,6 +59,7 @@ export class MetricsTracker {
 
   private storeMetric(metric: RequestMetrics) {
     this.metrics.push(metric);
+    console.log(`[MetricsTracker] Stored metric ${this.metrics.length}: ${metric.method} ${metric.path} - ${metric.statusCode} (${metric.responseTime}ms)`);
 
     // Keep only last N metrics
     if (this.metrics.length > this.maxMetrics) {
@@ -63,19 +71,25 @@ export class MetricsTracker {
     // Submit every 10 requests
     if (this.metrics.length % 10 === 0) {
       const metricsToSend = [...this.metrics];
+      console.log(`[MetricsTracker] Submitting ${metricsToSend.length} metrics to ${this.apiEndpoint}/metrics`);
 
       try {
-        await fetch(`${this.apiEndpoint}/metrics`, {
+        const response = await fetch(`${this.apiEndpoint}/metrics`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(this.apiKey && { [HTTP_HEADERS.API_KEY]: this.apiKey }),
+          },
           body: JSON.stringify({
             serviceName: this.serviceName,
             metrics: metricsToSend.slice(-10), // Send last 10
           }),
         });
+        const result = await response.json();
+        console.log(`[MetricsTracker] Submission result:`, result);
       } catch (error) {
         // Silently fail - don't break the app
-        console.error('Failed to submit metrics:', error);
+        console.error('[MetricsTracker] Failed to submit metrics:', error);
       }
     }
   }

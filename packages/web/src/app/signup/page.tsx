@@ -51,7 +51,7 @@ export default function SignupPage() {
       if (data.user) {
         // Check if email confirmation is required
         if (data.user.confirmed_at) {
-          router.push('/');
+          router.push('/dashboard');
           router.refresh();
         } else {
           setSuccess(true);
@@ -105,13 +105,13 @@ export default function SignupPage() {
           {/* Wireframe Icon */}
           <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center">
             <div className="relative h-full w-full">
-              <div className="absolute inset-0 border-2 border-gray-800" />
-              <div className="absolute inset-4 border border-gray-800" />
-              <div className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 bg-gray-800" />
-              <div className="absolute left-1/2 top-0 h-4 w-px bg-gray-800" />
-              <div className="absolute bottom-0 left-1/2 h-4 w-px bg-gray-800" />
-              <div className="absolute left-0 top-1/2 h-px w-4 bg-gray-800" />
-              <div className="absolute right-0 top-1/2 h-px w-4 bg-gray-800" />
+              <div className="absolute inset-0 border-2 border-gray-500" />
+              <div className="absolute inset-4 border border-gray-500" />
+              <div className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 bg-gray-500" />
+              <div className="absolute left-1/2 top-0 h-4 w-px bg-gray-500" />
+              <div className="absolute bottom-0 left-1/2 h-4 w-px bg-gray-500" />
+              <div className="absolute left-0 top-1/2 h-px w-4 bg-gray-500" />
+              <div className="absolute right-0 top-1/2 h-px w-4 bg-gray-500" />
             </div>
           </div>
 

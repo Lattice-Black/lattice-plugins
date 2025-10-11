@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { authenticateSupabase, AuthenticatedRequest } from '../middleware/auth';
 import { PaymentService, SubscriptionTier } from '../services/payment-service';
+import { SubscriptionService } from '../services/subscription-service';
+import { getTierLimits } from '../lib/tiers';
 
 /**
  * Billing and payment routes
@@ -8,6 +10,7 @@ import { PaymentService, SubscriptionTier } from '../services/payment-service';
 export const createBillingRouter = (): Router => {
   const router = Router();
   const paymentService = new PaymentService();
+  const subscriptionService = new SubscriptionService();
 
   /**
    * POST /billing/checkout - Create a checkout session
@@ -112,7 +115,7 @@ export const createBillingRouter = (): Router => {
   );
 
   /**
-   * GET /billing/subscription - Get current subscription status
+   * GET /billing/subscription - Get current subscription status with usage
    */
   router.get(
     '/subscription',
@@ -129,21 +132,39 @@ export const createBillingRouter = (): Router => {
           return;
         }
 
-        const subscription = await paymentService.getSubscriptionStatus(
+        // Get subscription info
+        const subscription = await subscriptionService.getUserSubscription(
           authReq.user.id
         );
 
-        if (!subscription) {
-          res.json({
-            status: 'inactive',
-            plan: 'free',
-            currentPeriodEnd: null,
-            trialEnd: null,
-          });
-          return;
-        }
+        // Get usage stats
+        const serviceCount = await subscriptionService.getUserServiceCount(
+          authReq.user.id
+        );
 
-        res.json(subscription);
+        // Get tier limits
+        const tier = subscription?.tier || 'free';
+        const limits = getTierLimits(tier);
+
+        res.json({
+          ...subscription,
+          tier,
+          usage: {
+            services: {
+              current: serviceCount,
+              limit: limits.maxServices,
+              unlimited: limits.maxServices === Infinity,
+            },
+          },
+          features: {
+            advancedMetrics: limits.advancedMetrics,
+            realTimeMonitoring: limits.realTimeMonitoring,
+            customIntegrations: limits.customIntegrations,
+            advancedAnalytics: limits.advancedAnalytics,
+            customSLA: limits.customSLA,
+            onPremiseDeployment: limits.onPremiseDeployment,
+          },
+        });
       } catch (error) {
         console.error('Get subscription error:', error);
         res.status(500).json({

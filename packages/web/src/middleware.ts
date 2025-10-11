@@ -10,12 +10,12 @@ export async function middleware(req: NextRequest) {
   } = await supabase.auth.getSession();
 
   // Protected routes - require authentication
-  const protectedPaths = ['/', '/graph', '/metrics', '/services'];
+  const protectedPaths = ['/dashboard'];
   const isProtectedPath = protectedPaths.some(path =>
     req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`)
   );
 
-  // Auth routes - should redirect to home if already authenticated
+  // Auth routes - should redirect to dashboard if already authenticated
   const authPaths = ['/login', '/signup'];
   const isAuthPath = authPaths.includes(req.nextUrl.pathname);
 
@@ -25,9 +25,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  // If accessing auth route with session, redirect to home
+  // If accessing auth route with session, redirect to dashboard
   if (isAuthPath && session) {
-    const redirectUrl = new URL('/', req.url);
+    const redirectUrl = new URL('/dashboard', req.url);
     return NextResponse.redirect(redirectUrl);
   }
 

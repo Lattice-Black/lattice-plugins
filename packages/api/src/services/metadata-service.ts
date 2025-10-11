@@ -68,7 +68,28 @@ export class MetadataService {
           '[]'
         ) as routes,
         COALESCE(
-          json_agg(DISTINCT d.*) FILTER (WHERE d.id IS NOT NULL),
+          json_agg(DISTINCT jsonb_build_object(
+            'id', d.id,
+            'serviceId', d.service_id,
+            'packageName', d.package_name,
+            'version', d.version,
+            'versionRange', d.version_range,
+            'dependencyType', d.dependency_type,
+            'scope', d.scope,
+            'installedSize', d.installed_size,
+            'publishSize', d.publish_size,
+            'fileCount', d.file_count,
+            'hasVulnerabilities', d.has_vulnerabilities,
+            'vulnerabilityCount', d.vulnerability_count,
+            'highestSeverity', d.highest_severity,
+            'description', d.description,
+            'license', d.license,
+            'repository', d.repository,
+            'homepage', d.homepage,
+            'firstSeen', d.first_seen,
+            'lastSeen', d.last_seen,
+            'metadata', d.metadata
+          )) FILTER (WHERE d.id IS NOT NULL),
           '[]'
         ) as dependencies
       FROM services s
@@ -93,7 +114,28 @@ export class MetadataService {
           '[]'
         ) as routes,
         COALESCE(
-          json_agg(DISTINCT d.*) FILTER (WHERE d.id IS NOT NULL),
+          json_agg(DISTINCT jsonb_build_object(
+            'id', d.id,
+            'serviceId', d.service_id,
+            'packageName', d.package_name,
+            'version', d.version,
+            'versionRange', d.version_range,
+            'dependencyType', d.dependency_type,
+            'scope', d.scope,
+            'installedSize', d.installed_size,
+            'publishSize', d.publish_size,
+            'fileCount', d.file_count,
+            'hasVulnerabilities', d.has_vulnerabilities,
+            'vulnerabilityCount', d.vulnerability_count,
+            'highestSeverity', d.highest_severity,
+            'description', d.description,
+            'license', d.license,
+            'repository', d.repository,
+            'homepage', d.homepage,
+            'firstSeen', d.first_seen,
+            'lastSeen', d.last_seen,
+            'metadata', d.metadata
+          )) FILTER (WHERE d.id IS NOT NULL),
           '[]'
         ) as dependencies
       FROM services s

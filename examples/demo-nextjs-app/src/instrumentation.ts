@@ -1,4 +1,4 @@
-import { LatticeNextPlugin } from '@lattice/plugin-nextjs';
+import { LatticeNextPlugin } from '@caryyon/plugin-nextjs';
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {

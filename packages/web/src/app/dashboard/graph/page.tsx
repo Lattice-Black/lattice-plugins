@@ -47,13 +47,13 @@ export default function NetworkGraphPage() {
           </div>
           <div className="flex gap-2">
             <Link
-              href="/"
+              href="/dashboard"
               className="px-4 py-2 border border-gray-800 text-sm text-gray-400 hover:text-white hover:border-gray-700 transition-colors font-mono"
             >
               Services
             </Link>
             <Link
-              href="/metrics"
+              href="/dashboard/metrics"
               className="px-4 py-2 border border-gray-800 text-sm text-gray-400 hover:text-white hover:border-gray-700 transition-colors font-mono"
             >
               Metrics

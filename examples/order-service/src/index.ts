@@ -1,5 +1,5 @@
 import express from 'express';
-import { LatticePlugin } from '@lattice/plugin-express';
+import { LatticePlugin } from '@caryyon/plugin-express';
 
 const app = express();
 

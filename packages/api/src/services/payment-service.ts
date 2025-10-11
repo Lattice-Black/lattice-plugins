@@ -118,8 +118,8 @@ export class PaymentService {
 
     // Store customer ID in database
     await pool.query(
-      `INSERT INTO subscriptions (user_id, stripe_customer_id, status, plan)
-       VALUES ($1, $2, 'inactive', 'free')
+      `INSERT INTO subscriptions (user_id, stripe_customer_id, status, plan, tier)
+       VALUES ($1, $2, 'inactive', 'free', 'free')
        ON CONFLICT (user_id)
        DO UPDATE SET stripe_customer_id = $2`,
       [userId, customer.id]
@@ -157,6 +157,19 @@ export class PaymentService {
   }
 
   /**
+   * Map Stripe price ID to tier
+   */
+  private getTierFromPriceId(priceId: string): SubscriptionTier {
+    const priceIds = {
+      [PRICE_IDS.basic]: 'basic' as const,
+      [PRICE_IDS.pro]: 'pro' as const,
+      [PRICE_IDS.enterprise]: 'enterprise' as const,
+    };
+
+    return priceIds[priceId] || 'free';
+  }
+
+  /**
    * Update subscription from Stripe webhook event
    */
   async updateSubscriptionFromWebhook(
@@ -166,6 +179,8 @@ export class PaymentService {
     const status = stripeSubscription.status;
     const plan =
       stripeSubscription.items.data[0]?.price?.lookup_key || 'unknown';
+    const priceId = stripeSubscription.items.data[0]?.price?.id;
+    const tier = priceId ? this.getTierFromPriceId(priceId) : 'free';
     const currentPeriodEnd = new Date(
       stripeSubscription.current_period_end * 1000
     );
@@ -175,17 +190,18 @@ export class PaymentService {
 
     await pool.query(
       `INSERT INTO subscriptions
-       (user_id, stripe_subscription_id, status, plan, current_period_end, trial_end)
-       VALUES ($1, $2, $3, $4, $5, $6)
+       (user_id, stripe_subscription_id, status, plan, tier, current_period_end, trial_end)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (user_id)
        DO UPDATE SET
          stripe_subscription_id = $2,
          status = $3,
          plan = $4,
-         current_period_end = $5,
-         trial_end = $6,
+         tier = $5,
+         current_period_end = $6,
+         trial_end = $7,
          updated_at = NOW()`,
-      [userId, stripeSubscription.id, status, plan, currentPeriodEnd, trialEnd]
+      [userId, stripeSubscription.id, status, plan, tier, currentPeriodEnd, trialEnd]
     );
   }
 

@@ -1,21 +1,96 @@
-# @lattice/plugin-nextjs
+# @caryyon/plugin-nextjs
 
 Lattice plugin for Next.js applications. Automatically discovers API routes and dependencies, then submits to the Lattice collector for visualization.
 
 ## Installation
 
 ```bash
-yarn add @lattice/plugin-nextjs
+# Configure npm to use GitHub Packages for @caryyon scope
+echo "@caryyon:registry=https://npm.pkg.github.com" >> .npmrc
+
+# Install the plugin
+yarn add @caryyon/plugin-nextjs
 ```
 
-## Quick Start
+## Configuration
 
-### App Router (Next.js 13+)
+### 1. Next.js Webpack Configuration
+
+Add the following to your `next.config.js` to externalize server-only packages:
+
+```javascript
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  experimental: {
+    instrumentationHook: true,
+  },
+  webpack: (config, { isServer }) => {
+    // For server-side builds, externalize server-only packages
+    if (isServer) {
+      config.externals = config.externals || []
+      config.externals.push({
+        '@caryyon/plugin-nextjs': 'commonjs @caryyon/plugin-nextjs',
+        '@caryyon/core': 'commonjs @caryyon/core',
+        'glob': 'commonjs glob',
+      })
+    }
+    return config
+  },
+}
+
+module.exports = nextConfig
+```
+
+### 2. Instrumentation Hook (Recommended)
+
+Create `src/instrumentation.ts` in your Next.js project:
+
+```typescript
+import { LatticeNextPlugin } from '@caryyon/plugin-nextjs';
+
+export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    console.log('🔍 Initializing Lattice plugin for Next.js...');
+
+    const lattice = new LatticeNextPlugin({
+      serviceName: 'my-nextjs-app',
+      environment: 'development',
+      apiEndpoint: 'http://localhost:3000/api/v1',
+      enabled: true,
+      autoSubmit: true,
+      onAnalyzed: (metadata) => {
+        console.log('📊 Service metadata analyzed:', {
+          service: metadata.service.name,
+          routes: metadata.routes?.length,
+          dependencies: metadata.dependencies?.length,
+        });
+      },
+      onSubmitted: (response) => {
+        console.log('✅ Metadata submitted to Lattice:', response.serviceId);
+      },
+      onError: (error) => {
+        console.error('❌ Lattice error:', error.message);
+      },
+    });
+
+    try {
+      await lattice.analyze();
+    } catch (error) {
+      console.error('Failed to analyze service:', error);
+    }
+  }
+}
+```
+
+## Quick Start (Alternative Methods)
+
+### App Router with Manual Import
 
 Create a file in your Next.js project (e.g., `lib/lattice.ts`):
 
 ```typescript
-import { LatticePlugin } from '@lattice/plugin-nextjs';
+import { LatticeNextPlugin } from '@caryyon/plugin-nextjs';
 
 const lattice = new LatticePlugin({
   serviceName: 'my-nextjs-app',

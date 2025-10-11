@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import { MetadataService } from '../services/metadata-service';
+import { MetricsService } from '../services/metrics-service';
 import { authenticateSupabase, AuthenticatedRequest } from '../middleware/auth';
 
 /**
@@ -9,6 +10,7 @@ import { authenticateSupabase, AuthenticatedRequest } from '../middleware/auth';
 export const createServicesRouter = (): Router => {
   const router = Router();
   const metadataService = new MetadataService();
+  const metricsService = new MetricsService();
 
   /**
    * GET /services
@@ -98,6 +100,71 @@ export const createServicesRouter = (): Router => {
       res.json(service);
     } catch (error) {
       console.error('Get service error:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  });
+
+  /**
+   * GET /services/:id/metrics
+   * Get metrics for a specific service (user-scoped)
+   * Requires Supabase JWT authentication
+   */
+  router.get('/:id/metrics', authenticateSupabase, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.id) {
+        res.status(401).json({
+          error: 'Unauthorized',
+          message: 'User authentication required',
+        });
+        return;
+      }
+
+      const userId = req.user.id;
+      const { id } = req.params;
+      const { limit, offset } = req.query;
+
+      if (!id) {
+        res.status(400).json({
+          error: 'Bad Request',
+          message: 'Service ID is required',
+        });
+        return;
+      }
+
+      const parsedLimit = limit ? parseInt(limit as string, 10) : 100;
+      const parsedOffset = offset ? parseInt(offset as string, 10) : 0;
+
+      // Verify service exists and belongs to user
+      let service = await metadataService.getServiceById(id, userId);
+      if (!service) {
+        service = await metadataService.getServiceByName(id, userId);
+      }
+
+      if (!service) {
+        res.status(404).json({
+          error: 'Not Found',
+          message: `Service "${id}" not found`,
+        });
+        return;
+      }
+
+      const result = await metricsService.getServiceMetrics(service.id, userId, {
+        limit: parsedLimit,
+        offset: parsedOffset,
+      });
+
+      res.json({
+        metrics: result.metrics,
+        stats: result.stats,
+        total: result.total,
+        limit: parsedLimit,
+        offset: parsedOffset,
+      });
+    } catch (error) {
+      console.error('Get service metrics error:', error);
       res.status(500).json({
         error: 'Internal Server Error',
         message: error instanceof Error ? error.message : 'Unknown error',

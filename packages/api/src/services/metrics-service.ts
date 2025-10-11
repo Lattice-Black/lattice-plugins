@@ -110,4 +110,67 @@ export class MetricsService {
     const result = await pool.query(query, [serviceName, userId, limit]);
     return result.rows;
   }
+
+  /**
+   * Get metrics for a service by service ID (user-scoped with pagination and stats)
+   */
+  async getServiceMetrics(
+    serviceId: string,
+    userId: string,
+    options: { limit?: number; offset?: number } = {}
+  ) {
+    const { limit = 100, offset = 0 } = options;
+
+    // Verify service belongs to user
+    const serviceCheck = await pool.query(
+      'SELECT id FROM services WHERE id = $1 AND user_id = $2',
+      [serviceId, userId]
+    );
+
+    if (serviceCheck.rows.length === 0) {
+      throw new Error(`Service not found or access denied`);
+    }
+
+    // Get metrics with pagination
+    const metricsQuery = `
+      SELECT *
+      FROM service_metrics
+      WHERE service_id = $1
+      ORDER BY timestamp DESC
+      LIMIT $2 OFFSET $3
+    `;
+
+    const metricsResult = await pool.query(metricsQuery, [serviceId, limit, offset]);
+
+    // Get total count
+    const countQuery = 'SELECT COUNT(*) as total FROM service_metrics WHERE service_id = $1';
+    const countResult = await pool.query(countQuery, [serviceId]);
+
+    // Calculate stats
+    const statsQuery = `
+      SELECT
+        COUNT(*) as total_requests,
+        AVG(response_time_ms) as avg_response_time,
+        COUNT(CASE WHEN status_code >= 400 THEN 1 END) as error_count,
+        ROUND(
+          (COUNT(CASE WHEN status_code >= 400 THEN 1 END)::numeric / COUNT(*)::numeric) * 100,
+          2
+        ) as error_rate
+      FROM service_metrics
+      WHERE service_id = $1
+    `;
+
+    const statsResult = await pool.query(statsQuery, [serviceId]);
+
+    return {
+      metrics: metricsResult.rows,
+      stats: {
+        totalRequests: parseInt(statsResult.rows[0].total_requests, 10),
+        avgResponseTime: Math.round(parseFloat(statsResult.rows[0].avg_response_time) || 0),
+        errorCount: parseInt(statsResult.rows[0].error_count, 10),
+        errorRate: parseFloat(statsResult.rows[0].error_rate) || 0,
+      },
+      total: parseInt(countResult.rows[0].total, 10),
+    };
+  }
 }

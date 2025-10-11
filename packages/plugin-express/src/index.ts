@@ -205,12 +205,17 @@ export class LatticePlugin {
 
   /**
    * Create metrics tracking middleware
-   * Must be called after analyze() to get the service name
+   * Can be called before or after analyze() - uses configured service name
    */
   createMetricsMiddleware() {
     if (!this.metricsTracker) {
-      const serviceName = this.getServiceName();
-      this.metricsTracker = new MetricsTracker(serviceName, this.config.apiEndpoint);
+      // Use configured service name, or detected name if available
+      const serviceName = this.serviceNameDetector.detectServiceName(this.config.serviceName);
+      this.metricsTracker = new MetricsTracker(
+        serviceName,
+        this.config.apiEndpoint,
+        this.config.apiKey
+      );
     }
     return this.metricsTracker.middleware();
   }

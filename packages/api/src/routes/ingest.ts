@@ -3,6 +3,7 @@ import { schemaValidator } from '@caryyon/core';
 import { MetadataService } from '../services/metadata-service';
 import { RouteService } from '../services/route-service';
 import { DependencyService } from '../services/dependency-service';
+import { SubscriptionService } from '../services/subscription-service';
 import { optionalAuth, AuthenticatedRequest } from '../middleware/auth';
 
 /**
@@ -13,6 +14,7 @@ export const createIngestRouter = (): Router => {
   const metadataService = new MetadataService();
   const routeService = new RouteService();
   const dependencyService = new DependencyService();
+  const subscriptionService = new SubscriptionService();
 
   /**
    * POST /ingest/metadata
@@ -39,6 +41,24 @@ export const createIngestRouter = (): Router => {
       }
 
       const { service, routes = [], dependencies = [] } = validationResult.data!;
+
+      // Check if this is a new service (not an update)
+      const existingService = await metadataService.getServiceByName(service.name, userId);
+      const isNewService = !existingService;
+
+      // If this is a new service, check tier limits
+      if (isNewService) {
+        const canAdd = await subscriptionService.canUserAddServices(userId, 1);
+        if (!canAdd.allowed) {
+          res.status(403).json({
+            error: 'Service limit exceeded',
+            message: canAdd.reason,
+            currentCount: canAdd.currentCount,
+            maxAllowed: canAdd.maxAllowed,
+          });
+          return;
+        }
+      }
 
       // Upsert service with user association
       const upsertedService = await metadataService.upsertService(service, userId);

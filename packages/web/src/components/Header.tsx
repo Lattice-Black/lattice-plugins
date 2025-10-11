@@ -11,7 +11,7 @@ export function Header() {
       <div className="container mx-auto px-6 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-3 group">
+            <Link href="/dashboard" className="flex items-center gap-3 group">
               <div className="w-8 h-8 border-2 border-white relative">
                 <div className="absolute inset-1 border border-gray-400" />
               </div>
@@ -22,13 +22,13 @@ export function Header() {
             {user && (
               <nav className="flex gap-6">
                 <Link
-                  href="/"
+                  href="/dashboard"
                   className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
                 >
                   Services
                 </Link>
                 <Link
-                  href="/graph"
+                  href="/dashboard/graph"
                   className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
                 >
                   Network Graph
