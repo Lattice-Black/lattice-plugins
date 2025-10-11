@@ -8,7 +8,7 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
-    "@lattice/plugin-express": "*",
+    "@caryyon/plugin-express": "*",
     "express": "^4.18.2"
   },
   "devDependencies": {

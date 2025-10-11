@@ -1,5 +1,5 @@
 {
-  "name": "@lattice/core",
+  "name": "@caryyon/core",
   "version": "0.1.0",
   "description": "Core types, validators, and utilities for Lattice",
   "main": "dist/index.js",
@@ -27,6 +27,12 @@
     "dist"
   ],
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Caryyon/lattice.git",
+    "directory": "packages/core"
   }
 }
