@@ -1,3 +1,5 @@
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable react/jsx-no-comment-textnodes */
 import Link from 'next/link';
 import { DotGrid } from '@/components/DotGrid';
 

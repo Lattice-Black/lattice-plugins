@@ -94,15 +94,15 @@ export default function PricingPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json() as { message?: string };
         throw new Error(errorData.message || 'Failed to create checkout session');
       }
 
-      const { url } = await response.json();
+      const data = await response.json() as { url: string };
 
       // Redirect to Stripe Checkout
-      window.location.href = url;
-    } catch (err) {
+      window.location.href = data.url;
+    } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to start checkout');
       setLoadingTier(null);
     }
