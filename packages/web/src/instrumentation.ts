@@ -18,7 +18,7 @@ export async function register() {
         apiKey: process.env.LATTICE_API_KEY,
         enabled: true,
         autoSubmit: true,
-        onAnalyzed: (metadata: any) => {
+        onAnalyzed: (metadata: ServiceMetadataSubmission) => {
           console.log('📊 Lattice web service metadata analyzed:', {
             service: metadata.service.name,
             routes: metadata.routes?.length || 0,
