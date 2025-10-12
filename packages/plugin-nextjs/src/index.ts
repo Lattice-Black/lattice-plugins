@@ -1,6 +1,8 @@
+import 'server-only';
+
 import { glob } from 'glob';
-import * as path from 'node:path';
-import * as fs from 'node:fs';
+import path from 'node:path';
+import fs from 'node:fs';
 import {
   Service,
   ServiceMetadataSubmission,
@@ -10,12 +12,13 @@ import {
   HttpMethod,
   DependencyType,
   generateId,
-} from '@caryyon/core';
+} from '@lattice.black/core';
 
 export interface LatticeNextConfig {
   serviceName: string;
   environment?: string;
   apiEndpoint?: string;
+  apiKey?: string;
   enabled?: boolean;
   autoSubmit?: boolean;
   appDir?: string; // Path to Next.js app directory
@@ -31,6 +34,7 @@ export class LatticeNextPlugin {
     this.config = {
       environment: process.env.NODE_ENV || 'development',
       apiEndpoint: process.env.LATTICE_API_ENDPOINT || 'http://localhost:3000/api/v1',
+      apiKey: config.apiKey || process.env.LATTICE_API_KEY || '',
       enabled: config.enabled ?? true,
       autoSubmit: config.autoSubmit ?? true,
       appDir: config.appDir || path.join(process.cwd(), 'src/app'),
@@ -208,9 +212,17 @@ export class LatticeNextPlugin {
     if (!this.config.enabled) return;
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (this.config.apiKey) {
+        headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+      }
+
       const response = await fetch(`${this.config.apiEndpoint}/ingest/metadata`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(metadata),
       });
 
