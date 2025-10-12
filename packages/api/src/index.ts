@@ -74,9 +74,14 @@ const startServer = async (): Promise<void> => {
           autoSubmit: true,
         });
 
+        // Add metrics tracking middleware BEFORE analyze
+        // This starts collecting request metrics immediately
+        app.use(lattice.createMetricsMiddleware());
+
         await lattice.analyze(app);
 
         console.log('✅ Lattice self-discovery initialized');
+        console.log('📊 Metrics tracking enabled');
       } catch (error) {
         console.error('⚠️  Lattice self-discovery failed:', error);
         // Don't crash the server if self-discovery fails

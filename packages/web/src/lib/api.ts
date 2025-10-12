@@ -105,3 +105,19 @@ export async function fetchMetricsConnections(): Promise<ServiceConnection[]> {
   const data = await response.json() as MetricsConnectionsResponse
   return data.connections || []
 }
+
+export async function fetchRecentMetrics(serviceName: string, limit: number = 1000) {
+  const url = `${API_BASE_URL}/metrics/recent/${encodeURIComponent(serviceName)}?limit=${limit}`
+
+  const headers = await getAuthHeaders()
+  const response = await fetch(url, {
+    headers,
+    cache: 'no-store',
+  })
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch recent metrics: ${response.statusText}`)
+  }
+
+  return response.json()
+}

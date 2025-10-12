@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { fetchServiceById } from '@/lib/api'
+import { fetchServiceById, fetchRecentMetrics } from '@/lib/api'
 import { formatDate, getRelativeTime } from '@/lib/utils'
 import { LoadingSpinner } from '@/components/Loading'
 import type { Route, Dependency } from '@/types'
@@ -24,6 +24,41 @@ async function ServiceDetails({ id }: { id: string }) {
 
   const routes: Route[] = service.routes || []
   const dependencies: Dependency[] = service.dependencies || []
+
+  // Fetch recent metrics for this service
+  let metricsData: any = null
+  let routeMetrics: Record<string, { count: number; avgTime: number; errors: number; errorRate: number }> = {}
+
+  try {
+    metricsData = await fetchRecentMetrics(service.name)
+    const metrics = metricsData.metrics || []
+
+    // Calculate per-route statistics
+    const stats: Record<string, { count: number; totalTime: number; errors: number }> = {}
+
+    for (const metric of metrics) {
+      const key = `${metric.method} ${metric.path}`
+      if (!stats[key]) {
+        stats[key] = { count: 0, totalTime: 0, errors: 0 }
+      }
+      stats[key].count++
+      stats[key].totalTime += metric.response_time_ms || 0
+      if (metric.status_code >= 400) stats[key].errors++
+    }
+
+    // Convert to final format with averages
+    for (const [key, data] of Object.entries(stats)) {
+      routeMetrics[key] = {
+        count: data.count,
+        avgTime: Math.round(data.totalTime / data.count),
+        errors: data.errors,
+        errorRate: data.count > 0 ? (data.errors / data.count) * 100 : 0,
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch metrics:', error)
+    // Continue without metrics - don't crash the page
+  }
 
   const statusColor = {
     active: 'text-white bg-gray-900',
@@ -195,42 +230,68 @@ async function ServiceDetails({ id }: { id: string }) {
             </h2>
           </div>
           <div className="divide-y divide-gray-800">
-            {routes.map((route) => (
-              <div key={route.id} className="p-6">
-                <div className="flex items-start gap-4">
-                  <span className={`px-2 py-1 border font-mono text-xs uppercase tracking-wider ${methodColors[route.method] || methodColors.GET}`}>
-                    {route.method}
-                  </span>
-                  <div className="flex-1">
-                    <div className="font-mono text-white mb-2">
-                      {route.path}
+            {routes.map((route) => {
+              const metricsKey = `${route.method} ${route.path}`
+              const metrics = routeMetrics[metricsKey]
+
+              return (
+                <div key={route.id} className="p-6">
+                  <div className="flex items-start gap-4">
+                    <span className={`px-2 py-1 border font-mono text-xs uppercase tracking-wider ${methodColors[route.method] || methodColors.GET}`}>
+                      {route.method}
+                    </span>
+                    <div className="flex-1">
+                      <div className="font-mono text-white mb-2">
+                        {route.path}
+                      </div>
+                      {route.description && (
+                        <div className="text-sm text-gray-500 mb-2">
+                          {route.description}
+                        </div>
+                      )}
+
+                      {/* Metrics Display */}
+                      {metrics && (
+                        <div className="flex gap-4 mt-3 mb-2">
+                          <div className="px-3 py-1.5 bg-gray-900 border border-gray-800">
+                            <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">Requests</div>
+                            <div className="text-sm font-mono text-white">{metrics.count.toLocaleString()}</div>
+                          </div>
+                          <div className="px-3 py-1.5 bg-gray-900 border border-gray-800">
+                            <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">Avg Time</div>
+                            <div className="text-sm font-mono text-white">{metrics.avgTime}ms</div>
+                          </div>
+                          <div className="px-3 py-1.5 bg-gray-900 border border-gray-800">
+                            <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">Error Rate</div>
+                            <div className={`text-sm font-mono ${metrics.errorRate > 5 ? 'text-red-400' : metrics.errorRate > 1 ? 'text-yellow-400' : 'text-green-400'}`}>
+                              {metrics.errorRate.toFixed(1)}%
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {route.tags && route.tags.length > 0 && (
+                        <div className="flex gap-2 flex-wrap">
+                          {route.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2 py-0.5 bg-gray-900 border border-gray-800 text-xs text-gray-400"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {route.description && (
-                      <div className="text-sm text-gray-500 mb-2">
-                        {route.description}
+                    <div className="text-right">
+                      <div className="font-mono text-xs text-gray-500">
+                        {getRelativeTime(route.lastSeen)}
                       </div>
-                    )}
-                    {route.tags && route.tags.length > 0 && (
-                      <div className="flex gap-2 flex-wrap">
-                        {route.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-2 py-0.5 bg-gray-900 border border-gray-800 text-xs text-gray-400"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <div className="font-mono text-xs text-gray-500">
-                      {getRelativeTime(route.lastSeen)}
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
