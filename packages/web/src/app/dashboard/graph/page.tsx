@@ -36,9 +36,9 @@ export default function NetworkGraphPage() {
     <div className="space-y-8">
       {/* Page Header */}
       <div className="border-b border-gray-800 pb-8">
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
               Network Graph
             </h1>
             <p className="text-gray-500 font-mono text-sm">
