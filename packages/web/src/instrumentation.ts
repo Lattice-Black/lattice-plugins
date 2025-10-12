@@ -14,7 +14,7 @@ export async function register() {
       const lattice = new LatticeNextPlugin({
         serviceName: 'lattice-web',
         environment: process.env.NODE_ENV || 'production',
-        apiEndpoint: process.env.LATTICE_API_ENDPOINT || 'https://lattice-api-production.up.railway.app/api/v1',
+        apiEndpoint: process.env.LATTICE_API_ENDPOINT || 'https://lattice-production.up.railway.app/api/v1',
         apiKey: process.env.LATTICE_API_KEY,
         enabled: true,
         autoSubmit: true,
