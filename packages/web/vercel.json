@@ -1,8 +1,7 @@
 {
-  "buildCommand": "cd ../.. && yarn workspace @lattice/web build",
+  "buildCommand": "yarn build",
   "devCommand": "yarn dev",
-  "installCommand": "cd ../.. && yarn install",
+  "installCommand": "yarn install",
   "framework": "nextjs",
-  "outputDirectory": ".next",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD ../../examples/"
+  "outputDirectory": ".next"
 }

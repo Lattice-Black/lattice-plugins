@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3010",
-    "build": "next build && node ../plugin-nextjs/dist/cli.js --service-name=lattice-web",
+    "build": "next build",
+    "postbuild": "node ../plugin-nextjs/dist/cli.js --service-name=lattice-web || echo 'Lattice submission skipped'",
     "start": "next start -p 3010",
     "lint": "next lint"
   },
