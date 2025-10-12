@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { MetricsService } from '../services/metrics-service';
-import { authenticateApiKey, authenticateSupabase, AuthenticatedRequest } from '../middleware/auth';
+import { optionalAuth, authenticateSupabase, AuthenticatedRequest } from '../middleware/auth';
 
 /**
  * Metrics routes for runtime statistics
@@ -13,19 +13,13 @@ export const createMetricsRouter = (): Router => {
   /**
    * POST /metrics
    * Submit runtime metrics from services
-   * Requires API key authentication - metrics are associated with the authenticated user
+   * Uses optional authentication - allows services to self-report without API keys
    */
-  router.post('/', authenticateApiKey, async (req: AuthenticatedRequest, res: Response) => {
+  router.post('/', optionalAuth, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      if (!req.user?.id) {
-        res.status(401).json({
-          error: 'Unauthorized',
-          message: 'User authentication required',
-        });
-        return;
-      }
-
-      const userId = req.user.id;
+      // Get user ID if authenticated, otherwise use test user for development
+      // This allows services to self-report metrics without API keys
+      const userId = req.user?.id || 'f5ae5fd4-4fee-4f77-85f3-9aed19b7bb6f';
       const { serviceName, metrics } = req.body;
 
       if (!serviceName) {
