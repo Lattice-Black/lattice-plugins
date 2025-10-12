@@ -7,7 +7,7 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
-  serverComponentsExternalPackages: ['@lattice.black/plugin-nextjs'],
+  serverExternalPackages: ['@lattice.black/plugin-nextjs', '@lattice.black/core', 'glob'],
 }
 
 module.exports = nextConfig

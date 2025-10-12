@@ -1,3 +1,4 @@
+import 'server-only';
 import { LatticeNextPlugin } from '@lattice.black/plugin-nextjs';
 
 export async function register() {
