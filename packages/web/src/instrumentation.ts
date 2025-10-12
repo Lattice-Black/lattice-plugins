@@ -1,3 +1,5 @@
+import type { ServiceMetadataSubmission } from '@lattice.black/core';
+
 export async function register() {
   // Only run in production and on Node.js runtime
   if (process.env.NEXT_RUNTIME === 'nodejs' && process.env.NODE_ENV === 'production') {
@@ -14,7 +16,7 @@ export async function register() {
         apiKey: process.env.LATTICE_API_KEY,
         enabled: true,
         autoSubmit: true,
-        onAnalyzed: (metadata) => {
+        onAnalyzed: (metadata: ServiceMetadataSubmission) => {
           console.log('📊 Lattice web service metadata analyzed:', {
             service: metadata.service.name,
             routes: metadata.routes?.length || 0,
@@ -24,7 +26,7 @@ export async function register() {
         onSubmitted: (response: { serviceId: string }) => {
           console.log('✅ Metadata submitted to Lattice:', response.serviceId);
         },
-        onError: (error) => {
+        onError: (error: Error) => {
           console.error('❌ Lattice error:', error.message);
         },
       });
