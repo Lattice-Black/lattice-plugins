@@ -1,8 +1,8 @@
 import type { ServiceMetadataSubmission } from '@lattice.black/core';
 
 export async function register() {
-  // Only run in production and on Node.js runtime
-  if (process.env.NEXT_RUNTIME === 'nodejs' && process.env.NODE_ENV === 'production') {
+  // Use typeof window check - this is a runtime check webpack cannot eliminate
+  if (typeof window === 'undefined') {
     console.log('🔍 Initializing Lattice plugin for Next.js web app...');
 
     try {
@@ -11,8 +11,8 @@ export async function register() {
 
       const lattice = new LatticeNextPlugin({
         serviceName: 'lattice-web',
-        environment: 'production',
-        apiEndpoint: 'https://lattice-api-production.up.railway.app/api/v1',
+        environment: process.env.NODE_ENV || 'production',
+        apiEndpoint: process.env.LATTICE_API_ENDPOINT || 'https://lattice-api-production.up.railway.app/api/v1',
         apiKey: process.env.LATTICE_API_KEY,
         enabled: true,
         autoSubmit: true,

@@ -217,7 +217,7 @@ export class LatticeNextPlugin {
       };
 
       if (this.config.apiKey) {
-        headers['Authorization'] = `Bearer ${this.config.apiKey}`;
+        headers['X-Lattice-API-Key'] = this.config.apiKey;
       }
 
       const response = await fetch(`${this.config.apiEndpoint}/ingest/metadata`, {
