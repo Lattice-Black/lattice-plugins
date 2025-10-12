@@ -13,7 +13,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@lattice.black/core": "*",
+    "@lattice.black/core": "^0.1.2",
     "express-list-endpoints": "^6.0.0",
     "fast-glob": "^3.3.2"
   },

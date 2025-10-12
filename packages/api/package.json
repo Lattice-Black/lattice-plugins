@@ -22,8 +22,8 @@
     "stripe:test:payment": "stripe trigger invoice.payment_succeeded"
   },
   "dependencies": {
-    "@lattice.black/core": "*",
-    "@lattice.black/plugin-express": "*",
+    "@lattice.black/core": "^0.1.2",
+    "@lattice.black/plugin-express": "^0.1.1",
     "@prisma/client": "^5.7.0",
     "@supabase/supabase-js": "^2.75.0",
     "cors": "^2.8.5",
