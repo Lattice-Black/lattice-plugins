@@ -1,10 +1,10 @@
+// Type-only imports are erased at compile time, so they don't cause bundling issues
+import type { ServiceMetadataSubmission } from '@lattice.black/core';
+
 export async function register() {
   // instrumentation.ts runs in BOTH Node.js and Edge runtimes
   // We MUST check NEXT_RUNTIME to only run in Node.js where we can use fs/path modules
   if (process.env.NEXT_RUNTIME === 'nodejs') {
-    // Dynamic import of types to avoid build-time bundling
-    const { ServiceMetadataSubmission } = await import('@lattice.black/core');
-
     console.log('🔍 Initializing Lattice plugin for Next.js web app...');
 
     try {
