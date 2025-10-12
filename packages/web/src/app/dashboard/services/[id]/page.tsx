@@ -46,7 +46,7 @@ async function ServiceDetails({ id }: { id: string }) {
     <div className="space-y-8">
       {/* Back Navigation */}
       <Link
-        href="/"
+        href="/dashboard/services"
         className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white transition-colors font-mono uppercase tracking-wider"
       >
         <span>←</span> Back to Services
