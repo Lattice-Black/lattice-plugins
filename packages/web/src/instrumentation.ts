@@ -1,8 +1,10 @@
-import type { ServiceMetadataSubmission } from '@lattice.black/core';
-
 export async function register() {
-  // Use typeof window check - this is a runtime check webpack cannot eliminate
-  if (typeof window === 'undefined') {
+  // instrumentation.ts runs in BOTH Node.js and Edge runtimes
+  // We MUST check NEXT_RUNTIME to only run in Node.js where we can use fs/path modules
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // Dynamic import of types to avoid build-time bundling
+    const { ServiceMetadataSubmission } = await import('@lattice.black/core');
+
     console.log('🔍 Initializing Lattice plugin for Next.js web app...');
 
     try {
@@ -16,7 +18,7 @@ export async function register() {
         apiKey: process.env.LATTICE_API_KEY,
         enabled: true,
         autoSubmit: true,
-        onAnalyzed: (metadata: ServiceMetadataSubmission) => {
+        onAnalyzed: (metadata: any) => {
           console.log('📊 Lattice web service metadata analyzed:', {
             service: metadata.service.name,
             routes: metadata.routes?.length || 0,
