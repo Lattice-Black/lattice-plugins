@@ -55,37 +55,39 @@ const startServer = async (): Promise<void> => {
     // Create Express app
     const app = createApp();
 
+    // Initialize Lattice self-discovery and metrics BEFORE starting server
+    // This ensures middleware is registered before routes start handling requests
+    try {
+      const { LatticePlugin } = await import('@lattice.black/plugin-express');
+
+      const lattice = new LatticePlugin({
+        serviceName: 'lattice-api',
+        environment: env.NODE_ENV,
+        apiEndpoint: `http://localhost:${env.PORT}/api/v1`,
+        apiKey: env.LATTICE_API_KEY,
+        enabled: true,
+        autoSubmit: true,
+      });
+
+      // Add metrics tracking middleware
+      // This must be done BEFORE app.listen() to track all requests
+      app.use(lattice.createMetricsMiddleware());
+
+      // Analyze routes and submit metadata
+      await lattice.analyze(app);
+
+      console.log('✅ Lattice self-discovery initialized');
+      console.log('📊 Metrics tracking enabled');
+    } catch (error) {
+      console.error('⚠️  Lattice self-discovery failed:', error);
+      // Don't crash the server if self-discovery fails
+    }
+
     // Start listening
-    app.listen(env.PORT, async () => {
+    app.listen(env.PORT, () => {
       console.log(`🚀 Lattice API server running on port ${env.PORT}`);
       console.log(`📊 Environment: ${env.NODE_ENV}`);
       console.log(`🔗 Health check: http://localhost:${env.PORT}/api/v1/health`);
-
-      // Initialize Lattice self-discovery
-      try {
-        const { LatticePlugin } = await import('@lattice.black/plugin-express');
-
-        const lattice = new LatticePlugin({
-          serviceName: 'lattice-api',
-          environment: env.NODE_ENV,
-          apiEndpoint: `http://localhost:${env.PORT}/api/v1`,
-          apiKey: env.LATTICE_API_KEY,
-          enabled: true,
-          autoSubmit: true,
-        });
-
-        // Add metrics tracking middleware BEFORE analyze
-        // This starts collecting request metrics immediately
-        app.use(lattice.createMetricsMiddleware());
-
-        await lattice.analyze(app);
-
-        console.log('✅ Lattice self-discovery initialized');
-        console.log('📊 Metrics tracking enabled');
-      } catch (error) {
-        console.error('⚠️  Lattice self-discovery failed:', error);
-        // Don't crash the server if self-discovery fails
-      }
     });
   } catch (error) {
     console.error('Failed to start server:', error);
