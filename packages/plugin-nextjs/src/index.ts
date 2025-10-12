@@ -1,5 +1,3 @@
-import 'server-only';
-
 import { glob } from 'glob';
 import path from 'node:path';
 import fs from 'node:fs';

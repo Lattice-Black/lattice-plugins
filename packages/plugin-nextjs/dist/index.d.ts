@@ -1,4 +1,3 @@
-import 'server-only';
 import { ServiceMetadataSubmission } from '@lattice.black/core';
 export interface LatticeNextConfig {
     serviceName: string;
