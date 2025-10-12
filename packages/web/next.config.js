@@ -4,6 +4,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  experimental: {
+    instrumentationHook: true,
+  },
+  serverComponentsExternalPackages: ['@lattice.black/plugin-nextjs'],
 }
 
 module.exports = nextConfig

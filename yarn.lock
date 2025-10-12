@@ -7,6 +7,34 @@
   resolved "https://registry.yarnpkg.com/@alloc/quick-lru/-/quick-lru-5.2.0.tgz#7bf68b20c0a350f936915fcae06f58e32007ce30"
   integrity sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==
 
+"@caryyon/core@*":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@caryyon/core/-/core-0.1.1.tgz#417e3b4ac41c136ed301e4c53d25a0898f90a6a0"
+  integrity sha512-svQ5hf9zMloBCGSIlH3uxNmoUYCZC1SDIoVHf8PkMgjfstDE9Xad3V9pzUGLXkkYFQTm0+EKNcxsWzxGEae63A==
+  dependencies:
+    "@paralleldrive/cuid2" "^2.2.2"
+    ajv "^8.12.0"
+    ajv-formats "^2.1.1"
+    tslib "^2.6.2"
+
+"@caryyon/plugin-express@*":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@caryyon/plugin-express/-/plugin-express-0.1.1.tgz#ede6fb855e423a224d719697ff475c9b0f4721ed"
+  integrity sha512-ej2Lne7AKzCfHoZFnBL9FBjYc69tl8UaNBXFqs/LCHSZTbVMUkXF4e6265QhHalI5Y9BzBkXRMBx9IvdSHnKWg==
+  dependencies:
+    "@caryyon/core" "*"
+    express-list-endpoints "^6.0.0"
+    fast-glob "^3.3.2"
+
+"@caryyon/plugin-nextjs@*":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@caryyon/plugin-nextjs/-/plugin-nextjs-0.1.2.tgz#efc27463daa0e47753c5dc83cf7593dd0e3a9f91"
+  integrity sha512-vhxmywYsyQjj816hpKjnrLq2yodB41O8HbEojsNRHpKf8yOw8ZEPh7/EVug7m7BojZfVn671nrRR/WOGXom5Rw==
+  dependencies:
+    "@caryyon/core" "*"
+    glob "^10.3.10"
+    server-only "^0.0.1"
+
 "@emnapi/core@^1.4.3":
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/@emnapi/core/-/core-1.5.0.tgz#85cd84537ec989cebb2343606a1ee663ce4edaf0"
@@ -4276,6 +4304,11 @@ serve-static@1.16.2:
     escape-html "~1.0.3"
     parseurl "~1.3.3"
     send "0.19.0"
+
+server-only@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/server-only/-/server-only-0.0.1.tgz#0f366bb6afb618c37c9255a314535dc412cd1c9e"
+  integrity sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==
 
 set-function-length@^1.2.2:
   version "1.2.2"
