@@ -189,7 +189,7 @@ export default function PricingPage() {
           {/* Footer Note */}
           <div className="mt-16 text-center">
             <p className="font-mono text-xs text-gray-600">
-              All plans include a 14-day free trial. No credit card required.
+              All plans include a 14-day free trial. No charges until trial ends.
             </p>
             <p className="mt-2 font-mono text-xs text-gray-600">
               Need a custom plan?{' '}

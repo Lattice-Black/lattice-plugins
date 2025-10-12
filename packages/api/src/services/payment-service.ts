@@ -29,7 +29,7 @@ export class PaymentService {
     // Get or create Stripe customer
     const customer = await this.getOrCreateCustomer(userId);
 
-    // Create checkout session
+    // Create checkout session with 14-day trial
     const session = await stripe.checkout.sessions.create({
       customer: customer.id,
       mode: 'subscription',
@@ -40,6 +40,9 @@ export class PaymentService {
           quantity: 1,
         },
       ],
+      subscription_data: {
+        trial_period_days: 14,
+      },
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {
