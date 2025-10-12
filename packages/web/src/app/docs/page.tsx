@@ -165,12 +165,11 @@ export default function DocsPage() {
                     3. Configure
                   </h3>
                   <p className="mb-3 font-mono text-sm text-gray-500">
-                    Set your environment variables:
+                    Set your API key from the dashboard:
                   </p>
                   <div className="border border-gray-800 bg-black p-4">
                     <pre className="font-mono text-xs overflow-x-auto">
                       <code>
-                        <span className="text-cyan-300">LATTICE_API_ENDPOINT</span>=<span className="text-green-400">http://localhost:3000/api/v1</span>{'\n'}
                         <span className="text-cyan-300">LATTICE_API_KEY</span>=<span className="text-green-400">your_api_key_here</span>
                       </code>
                     </pre>
@@ -220,7 +219,6 @@ export default function DocsPage() {
                       <span className="text-gray-600">// Initialize Lattice plugin</span>{'\n'}
                       <span className="text-purple-400">const</span> <span className="text-cyan-300">lattice</span> = <span className="text-purple-400">new</span> <span className="text-yellow-400">LatticePlugin</span>{'({'}{'\n'}
                       {'  '}<span className="text-cyan-300">serviceName</span>: <span className="text-green-400">'my-api'</span>,{'\n'}
-                      {'  '}<span className="text-cyan-300">apiEndpoint</span>: <span className="text-white">process</span>.<span className="text-cyan-300">env</span>.<span className="text-white">LATTICE_API_ENDPOINT</span>,{'\n'}
                       {'  '}<span className="text-cyan-300">apiKey</span>: <span className="text-white">process</span>.<span className="text-cyan-300">env</span>.<span className="text-white">LATTICE_API_KEY</span>,{'\n'}
                       {'});'}{'\n'}
                       {'\n'}
@@ -276,17 +274,6 @@ export default function DocsPage() {
                         </td>
                         <td className="px-4 py-3 font-mono text-xs text-gray-500">
                           Auto-detected
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3 font-mono text-xs text-white">
-                          apiEndpoint
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs text-gray-500">
-                          string
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs text-gray-500">
-                          process.env.LATTICE_API_ENDPOINT
                         </td>
                       </tr>
                       <tr>
@@ -393,7 +380,7 @@ export default function DocsPage() {
                       {'\n'}
                       <span className="text-purple-400">const</span> <span className="text-cyan-300">lattice</span> = <span className="text-purple-400">new</span> <span className="text-yellow-400">LatticeNextPlugin</span>{'({'}{'\n'}
                       {'  '}<span className="text-cyan-300">serviceName</span>: <span className="text-green-400">'my-nextjs-app'</span>,{'\n'}
-                      {'  '}<span className="text-cyan-300">apiEndpoint</span>: <span className="text-white">process</span>.<span className="text-cyan-300">env</span>.<span className="text-white">LATTICE_API_ENDPOINT</span>,{'\n'}
+                      {'  '}<span className="text-cyan-300">apiKey</span>: <span className="text-white">process</span>.<span className="text-cyan-300">env</span>.<span className="text-white">LATTICE_API_KEY</span>,{'\n'}
                       {'  '}<span className="text-cyan-300">appDir</span>: <span className="text-green-400">'./src/app'</span>, <span className="text-gray-600">// Path to your Next.js app directory</span>{'\n'}
                       {'});'}{'\n'}
                       {'\n'}
@@ -454,17 +441,6 @@ export default function DocsPage() {
                       </tr>
                       <tr>
                         <td className="px-4 py-3 font-mono text-xs text-white">
-                          apiEndpoint
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs text-gray-500">
-                          string
-                        </td>
-                        <td className="px-4 py-3 font-mono text-xs text-gray-500">
-                          http://localhost:3000/api/v1
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3 font-mono text-xs text-white">
                           appDir
                         </td>
                         <td className="px-4 py-3 font-mono text-xs text-gray-500">
@@ -513,13 +489,12 @@ export default function DocsPage() {
                   Environment Variables
                 </h3>
                 <p className="mb-3 font-mono text-sm text-gray-500">
-                  All plugins support configuration via environment variables:
+                  Configure the plugin with your API key:
                 </p>
                 <div className="border border-gray-800 bg-black p-4">
                   <pre className="font-mono text-xs overflow-x-auto">
                     <code>
-                      <span className="text-cyan-300">LATTICE_API_ENDPOINT</span>=<span className="text-green-400">http://localhost:3000/api/v1</span>{'\n'}
-                      <span className="text-cyan-300">LATTICE_API_KEY</span>=<span className="text-green-400">your_api_key</span>{'\n'}
+                      <span className="text-cyan-300">LATTICE_API_KEY</span>=<span className="text-green-400">your_api_key_from_dashboard</span>{'\n'}
                       <span className="text-cyan-300">LATTICE_ENABLED</span>=<span className="text-purple-400">true</span>{'\n'}
                       <span className="text-cyan-300">LATTICE_AUTO_SUBMIT</span>=<span className="text-purple-400">true</span>{'\n'}
                       <span className="text-cyan-300">LATTICE_SUBMIT_INTERVAL</span>=<span className="text-blue-400">300000</span>
