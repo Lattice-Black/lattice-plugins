@@ -13,6 +13,9 @@ dist/
 .next/
 out/
 
+# Allow plugin dist files for monorepo workspace dependencies
+!packages/plugin-*/dist/
+
 # Misc
 .DS_Store
 *.pem
