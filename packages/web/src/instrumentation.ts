@@ -2,9 +2,8 @@
 import type { ServiceMetadataSubmission } from '@lattice.black/core';
 
 export async function register() {
-  // instrumentation.ts runs in BOTH Node.js and Edge runtimes
-  // We MUST check NEXT_RUNTIME to only run in Node.js where we can use fs/path modules
-  if (process.env.NEXT_RUNTIME === 'nodejs') {
+  // Only run in server environment (skip in edge runtime)
+  if (typeof EdgeRuntime === 'undefined') {
     console.log('🔍 Initializing Lattice plugin for Next.js web app...');
 
     try {
