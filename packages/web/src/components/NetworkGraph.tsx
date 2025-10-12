@@ -427,7 +427,7 @@ export function NetworkGraph({ services }: NetworkGraphProps) {
               </div>
             </div>
             <a
-              href={`/services/${selectedNode.service.id}`}
+              href={`/dashboard/services/${selectedNode.service.id}`}
               className="px-3 py-2 md:px-4 border border-gray-700 hover:border-gray-600 text-white hover:bg-gray-900 transition-colors font-mono text-xs uppercase tracking-wider text-center whitespace-nowrap"
             >
               View Details
