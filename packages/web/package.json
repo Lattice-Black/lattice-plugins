@@ -5,13 +5,10 @@
   "scripts": {
     "dev": "next dev -p 3010",
     "build": "next build",
-    "postbuild": "lattice-next --service-name=lattice-web || echo 'Lattice submission skipped'",
     "start": "next start -p 3010",
     "lint": "next lint"
   },
   "dependencies": {
-    "@lattice.black/core": "^0.1.2",
-    "@lattice.black/plugin-nextjs": "^0.2.1",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.0",
     "@vercel/analytics": "^1.5.0",
