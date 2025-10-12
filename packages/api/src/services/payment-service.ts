@@ -1,10 +1,8 @@
 import { stripe, PRICE_IDS } from '../lib/stripe';
 import { pool } from '../lib/db';
+import { SubscriptionTier } from '../lib/tiers';
 
-/**
- * Subscription tier type
- */
-export type SubscriptionTier = 'basic' | 'pro' | 'enterprise';
+type PaidTier = 'basic' | 'pro' | 'enterprise';
 
 /**
  * Payment service for managing subscriptions
@@ -15,7 +13,7 @@ export class PaymentService {
    */
   async createCheckoutSession(
     userId: string,
-    tier: SubscriptionTier,
+    tier: PaidTier,
     successUrl: string,
     cancelUrl: string
   ): Promise<string> {
@@ -23,7 +21,7 @@ export class PaymentService {
       throw new Error('Stripe is not configured');
     }
 
-    const priceId = PRICE_IDS[tier];
+    const priceId = PRICE_IDS[tier as keyof typeof PRICE_IDS];
     if (!priceId) {
       throw new Error(`Price ID not configured for tier: ${tier}`);
     }

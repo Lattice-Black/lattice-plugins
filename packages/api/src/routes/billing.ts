@@ -1,8 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { authenticateSupabase, AuthenticatedRequest } from '../middleware/auth';
-import { PaymentService, SubscriptionTier } from '../services/payment-service';
+import { PaymentService } from '../services/payment-service';
 import { SubscriptionService } from '../services/subscription-service';
 import { getTierLimits } from '../lib/tiers';
+
+type PaidTier = 'basic' | 'pro' | 'enterprise';
 
 /**
  * Billing and payment routes
@@ -49,7 +51,7 @@ export const createBillingRouter = (): Router => {
 
         const checkoutUrl = await paymentService.createCheckoutSession(
           authReq.user.id,
-          tier as SubscriptionTier,
+          tier as PaidTier,
           successUrl,
           cancelUrl
         );
