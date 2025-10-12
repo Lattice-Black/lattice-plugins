@@ -18,7 +18,7 @@ export function PublicNav() {
   return (
     <>
       <header className="border-b border-gray-800 bg-black/50 backdrop-blur-sm">
-        <div className="container mx-auto px-6 py-6">
+        <div className="container mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3">
@@ -32,7 +32,7 @@ export function PublicNav() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-10">
               <Link
                 href="/docs"
                 className="font-mono text-sm text-gray-400 hover:text-white transition-colors"
