@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server';
  * NOTE: Disabled in Vercel serverless environment.
  * Service discovery runs during build via CLI tool (see package.json postbuild).
  */
-export async function GET() {
+export function GET() {
   return NextResponse.json({
     success: false,
     message: 'Runtime discovery disabled. Service metadata is submitted during build via CLI tool.',
