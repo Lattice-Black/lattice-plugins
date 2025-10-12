@@ -56,10 +56,31 @@ const startServer = async (): Promise<void> => {
     const app = createApp();
 
     // Start listening
-    app.listen(env.PORT, () => {
+    app.listen(env.PORT, async () => {
       console.log(`🚀 Lattice API server running on port ${env.PORT}`);
       console.log(`📊 Environment: ${env.NODE_ENV}`);
       console.log(`🔗 Health check: http://localhost:${env.PORT}/api/v1/health`);
+
+      // Initialize Lattice self-discovery
+      try {
+        const { LatticePlugin } = await import('@lattice.black/plugin-express');
+
+        const lattice = new LatticePlugin({
+          serviceName: 'lattice-api',
+          environment: env.NODE_ENV,
+          apiEndpoint: `http://localhost:${env.PORT}/api/v1`,
+          apiKey: env.LATTICE_API_KEY,
+          enabled: true,
+          autoSubmit: true,
+        });
+
+        await lattice.analyze(app);
+
+        console.log('✅ Lattice self-discovery initialized');
+      } catch (error) {
+        console.error('⚠️  Lattice self-discovery failed:', error);
+        // Don't crash the server if self-discovery fails
+      }
     });
   } catch (error) {
     console.error('Failed to start server:', error);

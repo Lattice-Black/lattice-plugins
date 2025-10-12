@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@lattice.black/core": "*",
+    "@lattice.black/plugin-express": "*",
     "@prisma/client": "^5.7.0",
     "@supabase/supabase-js": "^2.75.0",
     "cors": "^2.8.5",
