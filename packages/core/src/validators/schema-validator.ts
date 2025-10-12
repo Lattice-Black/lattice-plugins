@@ -1,6 +1,6 @@
 import Ajv, { ValidateFunction } from 'ajv';
 import addFormats from 'ajv-formats';
-import schemaV1 from '../../../../specs/001-service-discovery-and/contracts/schema-v1.json';
+import schemaV1 from '../schemas/schema-v1.json';
 import type { ServiceMetadataSubmission } from '../types';
 
 /**

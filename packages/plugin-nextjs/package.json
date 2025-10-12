@@ -1,12 +1,25 @@
 {
-  "name": "@caryyon/plugin-nextjs",
-  "version": "0.1.0",
+  "name": "@lattice.black/plugin-nextjs",
+  "version": "0.2.0",
   "description": "Lattice service discovery plugin for Next.js applications",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "lattice-next": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "node": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "postbuild": "chmod +x dist/cli.js"
   },
   "keywords": [
     "lattice",
@@ -16,8 +29,9 @@
     "api-discovery"
   ],
   "dependencies": {
-    "@caryyon/core": "*",
-    "glob": "^10.3.10"
+    "@lattice.black/core": "*",
+    "glob": "^10.3.10",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -28,7 +42,10 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "USER_GUIDE.md",
+    "MIGRATION.md",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public"

@@ -1,53 +1,47 @@
-# @caryyon/plugin-nextjs
+# @lattice.black/plugin-nextjs
 
 Lattice plugin for Next.js applications. Automatically discovers API routes and dependencies, then submits to the Lattice collector for visualization.
+
+**⚠️ Server-Only Package**: This plugin uses Node.js file system APIs and can only run on the server. It should be used in:
+- `instrumentation.ts` (recommended)
+- Server Components
+- API Routes
+- Server Actions
 
 ## Installation
 
 ```bash
-# Configure npm to use GitHub Packages for @caryyon scope
-echo "@caryyon:registry=https://npm.pkg.github.com" >> .npmrc
-
-# Install the plugin
-yarn add @caryyon/plugin-nextjs
+yarn add @lattice.black/plugin-nextjs
+# or
+npm install @lattice.black/plugin-nextjs
 ```
 
 ## Configuration
 
-### 1. Next.js Webpack Configuration
+### 1. Configure next.config.js
 
-Add the following to your `next.config.js` to externalize server-only packages:
+**IMPORTANT**: You must add this package to `serverComponentsExternalPackages` to prevent webpack bundling errors:
 
 ```javascript
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
   experimental: {
     instrumentationHook: true,
   },
-  webpack: (config, { isServer }) => {
-    // For server-side builds, externalize server-only packages
-    if (isServer) {
-      config.externals = config.externals || []
-      config.externals.push({
-        '@caryyon/plugin-nextjs': 'commonjs @caryyon/plugin-nextjs',
-        '@caryyon/core': 'commonjs @caryyon/core',
-        'glob': 'commonjs glob',
-      })
-    }
-    return config
-  },
+  serverComponentsExternalPackages: ['@lattice.black/plugin-nextjs'],
 }
 
-module.exports = nextConfig
+export default nextConfig;
 ```
 
-### 2. Instrumentation Hook (Recommended)
+> Without `serverComponentsExternalPackages`, Next.js will try to bundle this server-only package for the browser, causing "Module not found" errors for Node.js APIs.
+
+### 2. Create Instrumentation File (Recommended)
 
 Create `src/instrumentation.ts` in your Next.js project:
 
 ```typescript
-import { LatticeNextPlugin } from '@caryyon/plugin-nextjs';
+import { LatticeNextPlugin } from '@lattice.black/plugin-nextjs';
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
@@ -90,7 +84,7 @@ export async function register() {
 Create a file in your Next.js project (e.g., `lib/lattice.ts`):
 
 ```typescript
-import { LatticeNextPlugin } from '@caryyon/plugin-nextjs';
+import { LatticeNextPlugin } from '@lattice.black/plugin-nextjs';
 
 const lattice = new LatticePlugin({
   serviceName: 'my-nextjs-app',

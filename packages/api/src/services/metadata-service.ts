@@ -1,5 +1,5 @@
 import { pool } from '../lib/db';
-import { Service } from '@caryyon/core';
+import { Service } from '@lattice.black/core';
 
 /**
  * Service for managing service metadata with multi-tenancy support

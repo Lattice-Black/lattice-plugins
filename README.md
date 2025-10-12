@@ -60,48 +60,59 @@ curl http://localhost:3000/api/v1/services/demo-express-app
 ```
 lattice/
 ├── packages/
-│   ├── core/              # @lattice/core - Shared types and validators
-│   ├── plugin-express/    # @lattice/plugin-express - Express.js plugin
+│   ├── core/              # @lattice.black/core - Shared types and validators
+│   ├── plugin-express/    # @lattice.black/plugin-express - Express.js plugin
+│   ├── plugin-nextjs/     # @lattice.black/plugin-nextjs - Next.js plugin
 │   ├── api/               # @lattice/api - Collector API
-│   ├── sdk/               # @lattice/sdk - Base plugin SDK (planned)
-│   └── web/               # @lattice/web - Dashboard UI (planned)
+│   └── web/               # @lattice/web - Dashboard UI
 ├── examples/
-│   └── demo-express-app/  # Demo Express.js application
+│   ├── demo-express-app/  # Demo Express.js application
+│   └── demo-nextjs-app/   # Demo Next.js application
 ├── specs/                 # Feature specifications
 └── docker-compose.yml     # PostgreSQL + Redis
 ```
 
 ## Features
 
-### ✅ Phase 3 Complete (MVP)
+### ✅ Completed Features
 
-- **@lattice/core**
+- **@lattice.black/core** (Published to npm)
   - TypeScript types for all entities
   - JSON Schema validation
   - ID generation utilities
 
-- **@lattice/plugin-express**
+- **@lattice.black/plugin-express** (Published to npm)
   - Automatic route discovery
   - Dependency analysis from package.json
   - 9-tier service name auto-detection
   - Configurable metadata submission
   - Auto-submit with intervals
 
+- **@lattice.black/plugin-nextjs** (Published to npm)
+  - Next.js App Router and Pages Router support
+  - Automatic API route discovery
+  - Dependency analysis
+  - Instrumentation hook support
+
 - **@lattice/api**
   - PostgreSQL database with Prisma
   - Redis for caching
-  - POST /api/v1/ingest/metadata
-  - GET /api/v1/services
-  - GET /api/v1/services/:id
+  - Full REST API for service metadata
+  - API key authentication
   - Schema validation
 
-### 🚧 Coming Soon
+- **@lattice/web**
+  - Service dashboard with network graph
+  - Real-time metrics visualization
+  - Stripe subscription integration
+  - API key management
 
-- Service-to-service connection tracking (Phase 4)
-- Multi-service dashboard with search/filtering (Phase 5)
-- Real-time updates via SSE (Phase 5)
-- Cross-language plugin SDK (Phase 6)
-- Graph visualization (Phase 5)
+### 🚧 In Progress
+
+- Additional framework plugins (FastAPI, Django, etc.)
+- Enhanced analytics and insights
+- Advanced graph visualization features
+- Multi-tenancy support
 
 ## Documentation
 
@@ -160,9 +171,25 @@ LATTICE_ENABLED="true"
 
 Lattice uses a plugin-based architecture:
 
-1. **Plugins** (e.g., @lattice/plugin-express) discover metadata in your services
+1. **Plugins** (e.g., @lattice.black/plugin-express) discover metadata in your services
 2. **Collector API** (@lattice/api) receives and stores metadata
-3. **Dashboard** (@lattice/web - coming soon) visualizes the architecture
+3. **Dashboard** (@lattice/web) visualizes the architecture
+
+## Installation
+
+Install plugins from npm:
+
+```bash
+# For Express.js applications
+yarn add @lattice.black/plugin-express
+
+# For Next.js applications
+yarn add @lattice.black/plugin-nextjs
+```
+
+See package READMEs for usage instructions:
+- [@lattice.black/plugin-express](packages/plugin-express/README.md)
+- [@lattice.black/plugin-nextjs](packages/plugin-nextjs/README.md)
 
 ### Data Flow
 

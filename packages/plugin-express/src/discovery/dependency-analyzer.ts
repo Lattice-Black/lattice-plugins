@@ -1,6 +1,6 @@
 import { readFileSync, existsSync } from 'fs';
 import { resolve, join } from 'path';
-import { Dependency, DependencyType, generateId } from '@caryyon/core';
+import { Dependency, DependencyType, generateId } from '@lattice.black/core';
 
 /**
  * Package.json structure
@@ -146,7 +146,7 @@ export class DependencyAnalyzer {
   }
 
   /**
-   * Extract npm scope from package name (e.g., @caryyon/core -> @lattice)
+   * Extract npm scope from package name (e.g., @lattice.black/core -> @lattice)
    */
   private extractScope(packageName: string): string | undefined {
     if (packageName.startsWith('@')) {

@@ -1,5 +1,5 @@
 import { pool } from '../lib/db';
-import { Dependency } from '@caryyon/core';
+import { Dependency } from '@lattice.black/core';
 
 /**
  * Service for managing dependencies

@@ -49,3 +49,4 @@ Session.vim
 
 # Agent credentials (as recommended by spec-kit)
 .claude/
+.vercel

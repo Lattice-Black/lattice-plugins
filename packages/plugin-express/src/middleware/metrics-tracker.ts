@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { HTTP_HEADERS } from '@caryyon/core';
+import { HTTP_HEADERS } from '@lattice.black/core';
 
 export interface RequestMetrics {
   method: string;

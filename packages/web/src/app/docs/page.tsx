@@ -111,12 +111,12 @@ export default function DocsPage() {
                   <div className="space-y-2">
                     <div className="border border-gray-800 bg-black p-4">
                       <code className="font-mono text-xs text-gray-400">
-                        yarn add @caryyon/plugin-express
+                        yarn add @lattice.black/plugin-express
                       </code>
                     </div>
                     <div className="border border-gray-800 bg-black p-4">
                       <code className="font-mono text-xs text-gray-400">
-                        yarn add @caryyon/plugin-nextjs
+                        yarn add @lattice.black/plugin-nextjs
                       </code>
                     </div>
                   </div>
@@ -161,7 +161,7 @@ export default function DocsPage() {
                 </h3>
                 <div className="border border-gray-800 bg-black p-4">
                   <code className="font-mono text-xs text-gray-400">
-                    yarn add @caryyon/plugin-express
+                    yarn add @lattice.black/plugin-express
                   </code>
                 </div>
               </div>
@@ -174,7 +174,7 @@ export default function DocsPage() {
                   <pre className="font-mono text-xs overflow-x-auto">
                     <code>
                       <span className="text-purple-400">import</span> <span className="text-white">express</span> <span className="text-purple-400">from</span> <span className="text-green-400">'express'</span>;{'\n'}
-                      <span className="text-purple-400">import</span> {'{ '}<span className="text-white">LatticePlugin</span> {'} '}<span className="text-purple-400">from</span> <span className="text-green-400">'@caryyon/plugin-express'</span>;{'\n'}
+                      <span className="text-purple-400">import</span> {'{ '}<span className="text-white">LatticePlugin</span> {'} '}<span className="text-purple-400">from</span> <span className="text-green-400">'@lattice.black/plugin-express'</span>;{'\n'}
                       {'\n'}
                       <span className="text-purple-400">const</span> <span className="text-cyan-300">app</span> = <span className="text-yellow-400">express</span>();{'\n'}
                       {'\n'}
@@ -322,7 +322,7 @@ export default function DocsPage() {
                 </h3>
                 <div className="border border-gray-800 bg-black p-4">
                   <code className="font-mono text-xs text-gray-400">
-                    yarn add @caryyon/plugin-nextjs
+                    yarn add @lattice.black/plugin-nextjs
                   </code>
                 </div>
               </div>
@@ -338,7 +338,7 @@ export default function DocsPage() {
                   <pre className="font-mono text-xs overflow-x-auto">
                     <code>
                       <span className="text-gray-600">// scripts/discover.ts</span>{'\n'}
-                      <span className="text-purple-400">import</span> {'{ '}<span className="text-white">LatticeNextPlugin</span> {'} '}<span className="text-purple-400">from</span> <span className="text-green-400">'@caryyon/plugin-nextjs'</span>;{'\n'}
+                      <span className="text-purple-400">import</span> {'{ '}<span className="text-white">LatticeNextPlugin</span> {'} '}<span className="text-purple-400">from</span> <span className="text-green-400">'@lattice.black/plugin-nextjs'</span>;{'\n'}
                       {'\n'}
                       <span className="text-purple-400">const</span> <span className="text-cyan-300">lattice</span> = <span className="text-purple-400">new</span> <span className="text-yellow-400">LatticeNextPlugin</span>{'({'}{'\n'}
                       {'  '}<span className="text-cyan-300">serviceName</span>: <span className="text-green-400">'my-nextjs-app'</span>,{'\n'}

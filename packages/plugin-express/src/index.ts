@@ -4,7 +4,7 @@ import {
   ServiceMetadataSubmission,
   ServiceStatus,
   generateId,
-} from '@caryyon/core';
+} from '@lattice.black/core';
 import { LatticeConfig, DEFAULT_CONFIG, SubmissionResponse } from './config/types';
 import { RouteAnalyzer } from './discovery/route-analyzer';
 import { DependencyAnalyzer } from './discovery/dependency-analyzer';

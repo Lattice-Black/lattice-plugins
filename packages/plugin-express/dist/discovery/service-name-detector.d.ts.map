@@ -1,0 +1,1 @@
+{"version":3,"file":"service-name-detector.d.ts","sourceRoot":"","sources":["../../src/discovery/service-name-detector.ts"],"names":[],"mappings":"AAQA,qBAAa,mBAAmB;IAI9B,iBAAiB,CAAC,UAAU,CAAC,EAAE,MAAM,GAAG,MAAM;IAsD9C,OAAO,CAAC,kBAAkB;IA+B1B,OAAO,CAAC,wBAAwB;IAahC,OAAO,CAAC,sBAAsB;IAiB9B,OAAO,CAAC,mBAAmB;IAsB3B,OAAO,CAAC,cAAc;IAuBtB,OAAO,CAAC,eAAe;IAgBvB,OAAO,CAAC,YAAY;CA2BrB"}

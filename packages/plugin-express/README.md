@@ -1,22 +1,20 @@
-# @caryyon/plugin-express
+# @lattice.black/plugin-express
 
 Lattice plugin for Express.js applications. Automatically discovers routes and dependencies, then submits to the Lattice collector for visualization.
 
 ## Installation
 
 ```bash
-# Configure npm to use GitHub Packages for @caryyon scope
-echo "@caryyon:registry=https://npm.pkg.github.com" >> .npmrc
-
-# Install the plugin
-yarn add @caryyon/plugin-express
+yarn add @lattice.black/plugin-express
+# or
+npm install @lattice.black/plugin-express
 ```
 
 ## Quick Start
 
 ```typescript
 import express from 'express';
-import { LatticePlugin } from '@caryyon/plugin-express';
+import { LatticePlugin } from '@lattice.black/plugin-express';
 
 const app = express();
 
