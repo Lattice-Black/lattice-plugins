@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { DotGrid } from '@/components/DotGrid';
+import { PublicNav } from '@/components/PublicNav';
 
 export default function HomePage() {
   return (
@@ -7,46 +8,7 @@ export default function HomePage() {
       <DotGrid />
 
       <div className="relative z-10">
-        {/* Header */}
-        <header className="border-b border-gray-800 bg-black/50 backdrop-blur-sm">
-          <div className="container mx-auto px-6 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="relative h-8 w-8">
-                  <div className="absolute inset-0 border border-gray-500" />
-                  <div className="absolute inset-1 border border-gray-500" />
-                </div>
-                <span className="font-mono text-xl font-bold uppercase tracking-tight text-white">
-                  Lattice
-                </span>
-              </div>
-
-              <nav className="flex items-center gap-6">
-                <Link
-                  href="/docs"
-                  className="font-mono text-sm text-gray-400 hover:text-white transition-colors"
-                >
-                  Docs
-                </Link>
-                <Link
-                  href="/pricing"
-                  className="font-mono text-sm text-gray-400 hover:text-white transition-colors"
-                >
-                  Pricing
-                </Link>
-                <Link href="/login" className="font-mono text-sm text-gray-400 hover:text-white transition-colors">
-                  Sign In
-                </Link>
-                <Link
-                  href="/signup"
-                  className="border border-white bg-white px-4 py-2 font-mono text-sm uppercase tracking-wider text-black hover:bg-gray-100 transition-colors"
-                >
-                  Get Started
-                </Link>
-              </nav>
-            </div>
-          </div>
-        </header>
+        <PublicNav />
 
         {/* Hero Section */}
         <section className="container mx-auto px-6 py-24">

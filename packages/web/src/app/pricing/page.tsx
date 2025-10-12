@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { DotGrid } from '@/components/DotGrid';
+import { PublicNav } from '@/components/PublicNav';
 import { getSessionToken } from '@/lib/supabase/utils';
 
 type SubscriptionTier = 'basic' | 'pro' | 'enterprise';
@@ -113,35 +114,7 @@ export default function PricingPage() {
       <DotGrid />
 
       <div className="relative z-10">
-        {/* Header */}
-        <header className="border-b border-gray-800 bg-black/50 backdrop-blur-sm">
-          <div className="container mx-auto px-6 py-6">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-3">
-                <div className="relative h-8 w-8">
-                  <div className="absolute inset-0 border border-gray-500" />
-                  <div className="absolute inset-1 border border-gray-500" />
-                </div>
-                <span className="font-mono text-xl font-bold uppercase tracking-tight text-white">
-                  Lattice
-                </span>
-              </Link>
-
-              <div className="flex gap-4">
-                <Link href="/login">
-                  <Button variant="ghost" size="md">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/signup">
-                  <Button variant="primary" size="md">
-                    Get Started
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </header>
+        <PublicNav />
 
         {/* Main Content */}
         <main className="container mx-auto px-6 py-16">

@@ -33,6 +33,12 @@ export function Header() {
                 >
                   Network Graph
                 </Link>
+                <Link
+                  href="/dashboard/settings"
+                  className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
+                >
+                  Settings
+                </Link>
               </nav>
             )}
           </div>

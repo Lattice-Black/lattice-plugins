@@ -5,6 +5,7 @@ import { createMetricsRouter } from './metrics';
 import { createAuthRouter } from './auth';
 import { createBillingRouter } from './billing';
 import { createWebhooksRouter } from './webhooks';
+import { createApiKeysRouter } from './api-keys';
 
 /**
  * Main API router
@@ -29,6 +30,7 @@ export const createApiRouter = (): Router => {
   router.use('/ingest', createIngestRouter());
   router.use('/services', createServicesRouter());
   router.use('/metrics', createMetricsRouter());
+  router.use('/api-keys', createApiKeysRouter());
 
   // TODO: Register additional routes
   // router.use('/graph', graphRouter);
