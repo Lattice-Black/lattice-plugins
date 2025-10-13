@@ -90,21 +90,24 @@ const startServer = async (): Promise<void> => {
     // Create Express app with metrics middleware
     const app = createApp(metricsMiddleware);
 
-    // Analyze routes and submit metadata (after app is created with routes)
-    if (latticePlugin) {
-      try {
-        await latticePlugin.analyze(app);
-        console.log('✅ Lattice self-discovery completed');
-      } catch (error) {
-        console.error('⚠️  Lattice self-discovery failed:', error);
-      }
-    }
-
     // Start listening
     app.listen(env.PORT, () => {
       console.log(`🚀 Lattice API server running on port ${env.PORT}`);
       console.log(`📊 Environment: ${env.NODE_ENV}`);
       console.log(`🔗 Health check: http://localhost:${env.PORT}/api/v1/health`);
+
+      // Analyze routes and submit metadata AFTER server is listening
+      // Use setTimeout to ensure server is fully ready to accept requests
+      if (latticePlugin) {
+        setTimeout(async () => {
+          try {
+            await latticePlugin.analyze(app);
+            console.log('✅ Lattice self-discovery completed');
+          } catch (error) {
+            console.error('⚠️  Lattice self-discovery failed:', error);
+          }
+        }, 1000); // Wait 1 second for server to be fully ready
+      }
     });
   } catch (error) {
     console.error('Failed to start server:', error);
