@@ -102,7 +102,6 @@ async function MetricsStatsGrid() {
         // Determine health status based on metrics
         const isHealthy = errorRate < 1 && avgTime < 500
         const isDegraded = errorRate >= 1 && errorRate < 5
-        const isDown = errorRate >= 5
 
         const healthColor = isHealthy ? 'text-green-400' : isDegraded ? 'text-yellow-400' : 'text-red-400'
         const healthBorder = isHealthy ? 'border-green-900' : isDegraded ? 'border-yellow-900' : 'border-red-900'
