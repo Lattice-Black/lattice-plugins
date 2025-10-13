@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
+import { getMetricsTracker } from '@/lib/metrics-tracker';
 
 export async function middleware(req: NextRequest) {
+  const startTime = Date.now();
   const { supabase, response } = createClient(req);
 
   const {
@@ -29,6 +31,22 @@ export async function middleware(req: NextRequest) {
   if (isAuthPath && session) {
     const redirectUrl = new URL('/dashboard', req.url);
     return NextResponse.redirect(redirectUrl);
+  }
+
+  // Track metrics for API routes
+  if (req.nextUrl.pathname.startsWith('/api/')) {
+    const responseTime = Date.now() - startTime;
+    const tracker = getMetricsTracker();
+
+    if (tracker) {
+      tracker.track({
+        method: req.method,
+        path: req.nextUrl.pathname,
+        statusCode: response.status,
+        responseTime,
+        timestamp: new Date(),
+      });
+    }
   }
 
   return response;

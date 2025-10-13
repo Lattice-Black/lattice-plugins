@@ -22,6 +22,9 @@ export async function register() {
       // Initialize logging infrastructure
       await initializeLogging()
 
+      // Initialize metrics tracking
+      await initializeMetrics()
+
       console.log('✅ Server instrumentation complete')
     } catch (error) {
       // Don't throw - log and continue (server should still start)
@@ -49,5 +52,34 @@ async function initializeLogging() {
     console.log('📝 Logging initialized')
   } catch (error) {
     console.error('Failed to initialize logging:', error)
+  }
+}
+
+/**
+ * Initialize metrics tracking
+ * - Tracks API route performance and submits to Lattice API
+ * - Requires LATTICE_API_ENDPOINT and optionally LATTICE_API_KEY
+ */
+async function initializeMetrics() {
+  try {
+    // Dynamic import to avoid bundling issues
+    const { initMetricsTracker } = await import('./lib/metrics-tracker')
+
+    const apiEndpoint = process.env.LATTICE_API_ENDPOINT || 'https://lattice-production.up.railway.app/api/v1'
+    const apiKey = process.env.LATTICE_API_KEY
+
+    if (!apiKey) {
+      console.warn('⚠️  LATTICE_API_KEY not set - metrics will be submitted without authentication')
+    }
+
+    initMetricsTracker({
+      serviceName: 'lattice-web',
+      apiEndpoint,
+      apiKey,
+    })
+
+    console.log('📊 Metrics tracking initialized')
+  } catch (error) {
+    console.error('Failed to initialize metrics tracking:', error)
   }
 }
