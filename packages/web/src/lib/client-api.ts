@@ -11,7 +11,7 @@ import { getSessionToken } from './supabase/utils'
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1'
 
 /**
- * Get headers with authentication token (client-side)
+ * Get headers with authentication token and distributed tracing (client-side)
  */
 async function getAuthHeaders(): Promise<HeadersInit> {
   const token = await getSessionToken()
@@ -23,6 +23,7 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
+    'X-Origin-Service': 'lattice-web', // Distributed tracing header
   }
 }
 
