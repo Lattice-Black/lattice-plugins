@@ -8,17 +8,16 @@
 import { NextResponse } from 'next/server'
 import { getLogger } from '@/lib/logging'
 
-export async function GET(request: Request) {
+export function GET(request: Request) {
   const logger = getLogger()
 
-  // Log request received
-  if ('info' in logger && typeof logger.info === 'function') {
-    logger.info('API request received', {
-      path: request.url,
-      method: request.method,
-      userAgent: request.headers.get('user-agent'),
-    })
-  }
+  // Log request received (pino format: message, data object)
+  logger.info({
+    msg: 'API request received',
+    path: request.url,
+    method: request.method,
+    userAgent: request.headers.get('user-agent'),
+  })
 
   try {
     // Your logic here
@@ -29,21 +28,19 @@ export async function GET(request: Request) {
     }
 
     // Log successful response
-    if ('info' in logger && typeof logger.info === 'function') {
-      logger.info('API request successful', {
-        responseData: data,
-      })
-    }
+    logger.info({
+      msg: 'API request successful',
+      responseData: data,
+    })
 
     return NextResponse.json(data)
   } catch (error) {
     // Log error
-    if ('error' in logger && typeof logger.error === 'function') {
-      logger.error('API request failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-      })
-    }
+    logger.error({
+      msg: 'API request failed',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    })
 
     return NextResponse.json(
       { error: 'Internal Server Error' },

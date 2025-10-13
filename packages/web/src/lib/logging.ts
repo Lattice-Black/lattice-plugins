@@ -13,7 +13,7 @@ interface LoggerConfig {
  * - Must be called in instrumentation.ts BEFORE any other code
  * - Only works in Node.js runtime
  */
-export async function initLogger(config: LoggerConfig): Promise<Logger> {
+export function initLogger(config: LoggerConfig): Logger {
   if (logger) {
     return logger // Already initialized
   }
@@ -46,12 +46,13 @@ export async function initLogger(config: LoggerConfig): Promise<Logger> {
 }
 
 /**
- * Get logger instance (safe - returns console if not initialized)
+ * Get logger instance (safe - returns console-compatible object if not initialized)
  */
-export function getLogger(): Logger | Console {
+export function getLogger(): Logger {
   if (!logger) {
     // Fallback to console if logger not initialized
-    return console
+    // Cast to Logger type for TypeScript compatibility
+    return console as unknown as Logger
   }
   return logger
 }
@@ -59,24 +60,20 @@ export function getLogger(): Logger | Console {
 /**
  * Log error with full context
  */
-export async function logError(context: {
+export function logError(context: {
   error: Error
   digest?: string
   path?: string
   method?: string
   [key: string]: unknown
-}): Promise<void> {
+}): void {
   const log = getLogger()
 
-  if ('error' in log && typeof log.error === 'function') {
-    log.error({
-      msg: context.error.message,
-      stack: context.error.stack,
-      digest: context.digest,
-      path: context.path,
-      method: context.method,
-    })
-  } else {
-    console.error('Error:', context)
-  }
+  log.error({
+    msg: context.error.message,
+    stack: context.error.stack,
+    digest: context.digest,
+    path: context.path,
+    method: context.method,
+  })
 }
