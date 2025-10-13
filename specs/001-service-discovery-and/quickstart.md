@@ -119,7 +119,7 @@ interface LatticeConfig {
   environment?: string;           // Auto-detected from NODE_ENV
 
   // API Connection
-  apiEndpoint?: string;           // Default: https://api.lattice.dev/v1
+  apiEndpoint?: string;           // Default: https://lattice-production.up.railway.app/api/v1
   apiKey?: string;               // Required for production (env: LATTICE_API_KEY)
 
   // Behavior
@@ -348,7 +348,7 @@ SERVICE_NAME=my-service                 # Fallback name
 NODE_ENV=production                     # Auto-detected environment
 
 # API Configuration
-LATTICE_API_ENDPOINT=https://api.lattice.dev/v1
+LATTICE_API_ENDPOINT=https://lattice-production.up.railway.app/api/v1
 LATTICE_API_KEY=your-api-key-here       # Required for production
 
 # Behavior

@@ -23,7 +23,7 @@ export const API_ENDPOINTS = {
  * Default API configuration
  */
 export const API_CONFIG = {
-  DEFAULT_ENDPOINT: 'https://api.lattice.dev/v1',
+  DEFAULT_ENDPOINT: 'https://lattice-production.up.railway.app/api/v1',
   DEFAULT_TIMEOUT: 5000,
   DEFAULT_RETRY_ATTEMPTS: 3,
 } as const;

@@ -135,7 +135,7 @@ const lattice = new LatticePlugin({
   environment: 'production',           // Defaults to NODE_ENV
 
   // API connection
-  apiEndpoint: 'https://api.lattice.dev/v1',
+  apiEndpoint: 'https://lattice-production.up.railway.app/api/v1',
   apiKey: process.env.LATTICE_API_KEY,
 
   // Behavior
@@ -168,7 +168,7 @@ const lattice = new LatticePlugin({
 
 ```bash
 LATTICE_SERVICE_NAME=my-nextjs-app
-LATTICE_API_ENDPOINT=https://api.lattice.dev/v1
+LATTICE_API_ENDPOINT=https://lattice-production.up.railway.app/api/v1
 LATTICE_API_KEY=your-api-key
 LATTICE_ENABLED=true
 ```
