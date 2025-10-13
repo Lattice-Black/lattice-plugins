@@ -64,21 +64,26 @@ async function initializeMetrics() {
   try {
     // Dynamic import to avoid bundling issues
     const { initMetricsTracker } = await import('./lib/metrics-tracker')
+    const { initHttpInterceptor } = await import('./lib/http-interceptor')
 
     const apiEndpoint = process.env.LATTICE_API_ENDPOINT || 'https://lattice-production.up.railway.app/api/v1'
     const apiKey = process.env.LATTICE_API_KEY
+    const serviceName = 'lattice-web'
 
     if (!apiKey) {
       console.warn('⚠️  LATTICE_API_KEY not set - metrics will be submitted without authentication')
     }
 
     initMetricsTracker({
-      serviceName: 'lattice-web',
+      serviceName,
       apiEndpoint,
       apiKey,
     })
 
-    console.log('📊 Metrics tracking initialized')
+    // Initialize HTTP interceptor for outgoing requests
+    initHttpInterceptor(serviceName)
+
+    console.log('📊 Metrics tracking and HTTP interceptor initialized')
   } catch (error) {
     console.error('Failed to initialize metrics tracking:', error)
   }

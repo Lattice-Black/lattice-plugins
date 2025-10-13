@@ -5,7 +5,7 @@ export interface RequestMetrics {
     statusCode: number;
     responseTime: number;
     timestamp: Date;
-    serviceName?: string;
+    callerServiceName?: string;
 }
 export declare class MetricsTracker {
     private serviceName;

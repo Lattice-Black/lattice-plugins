@@ -7,7 +7,7 @@ export interface RequestMetrics {
   statusCode: number;
   responseTime: number;
   timestamp: Date;
-  serviceName?: string;
+  callerServiceName?: string;
 }
 
 export class MetricsTracker {
@@ -34,13 +34,16 @@ export class MetricsTracker {
       res.end = function (...args: any[]): Response {
         const responseTime = Date.now() - startTime;
 
+        // Extract caller service from distributed tracing header
+        const callerServiceName = req.get(HTTP_HEADERS.ORIGIN_SERVICE) || req.get('X-Origin-Service');
+
         const metric: RequestMetrics = {
           method: req.method,
           path: req.path,
           statusCode: res.statusCode,
           responseTime,
           timestamp: new Date(),
-          serviceName: req.get('X-Service-Name'),
+          callerServiceName,
         };
 
         // Store metric

@@ -11,6 +11,7 @@ interface RequestMetric {
   statusCode: number
   responseTime: number
   timestamp: Date
+  callerServiceName?: string
 }
 
 export class MetricsTracker {

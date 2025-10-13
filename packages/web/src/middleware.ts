@@ -39,12 +39,16 @@ export async function middleware(req: NextRequest) {
     const tracker = getMetricsTracker();
 
     if (tracker) {
+      // Extract caller service from distributed tracing header
+      const callerServiceName = req.headers.get('X-Origin-Service') || undefined;
+
       tracker.track({
         method: req.method,
         path: req.nextUrl.pathname,
         statusCode: response.status,
         responseTime,
         timestamp: new Date(),
+        callerServiceName,
       });
     }
   }

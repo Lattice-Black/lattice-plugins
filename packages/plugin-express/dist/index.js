@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LatticePlugin = void 0;
+exports.HttpInterceptor = exports.LatticePlugin = void 0;
 const tslib_1 = require("tslib");
 const core_1 = require("@lattice.black/core");
 const types_1 = require("./config/types");
@@ -9,6 +9,7 @@ const dependency_analyzer_1 = require("./discovery/dependency-analyzer");
 const service_name_detector_1 = require("./discovery/service-name-detector");
 const api_client_1 = require("./client/api-client");
 const metrics_tracker_1 = require("./middleware/metrics-tracker");
+const http_interceptor_1 = require("./client/http-interceptor");
 class LatticePlugin {
     config;
     routeAnalyzer;
@@ -18,6 +19,7 @@ class LatticePlugin {
     metadata = null;
     submitTimer = null;
     metricsTracker = null;
+    httpInterceptor = null;
     constructor(config = {}) {
         this.config = {
             ...types_1.DEFAULT_CONFIG,
@@ -137,6 +139,13 @@ class LatticePlugin {
         }
         return this.metricsTracker.middleware();
     }
+    getHttpClient() {
+        if (!this.httpInterceptor) {
+            const serviceName = this.serviceNameDetector.detectServiceName(this.config.serviceName);
+            this.httpInterceptor = new http_interceptor_1.HttpInterceptor(serviceName);
+        }
+        return this.httpInterceptor;
+    }
     handleError(error) {
         if (this.config.onError) {
             this.config.onError(error);
@@ -181,4 +190,6 @@ class LatticePlugin {
 }
 exports.LatticePlugin = LatticePlugin;
 tslib_1.__exportStar(require("./config/types"), exports);
+var http_interceptor_2 = require("./client/http-interceptor");
+Object.defineProperty(exports, "HttpInterceptor", { enumerable: true, get: function () { return http_interceptor_2.HttpInterceptor; } });
 //# sourceMappingURL=index.js.map

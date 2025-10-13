@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import { Service } from '@/types'
+import { Service, ServiceConnection } from '@/types'
+import { fetchMetricsConnections } from '@/lib/client-api'
 
 interface NetworkGraphProps {
   services: Service[]
@@ -22,6 +23,7 @@ export function NetworkGraph({ services }: NetworkGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const [nodes, setNodes] = useState<Node[]>([])
+  const [connections, setConnections] = useState<ServiceConnection[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [draggedNode, setDraggedNode] = useState<Node | null>(null)
   const [zoom, setZoom] = useState(1)
@@ -34,10 +36,30 @@ export function NetworkGraph({ services }: NetworkGraphProps) {
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const needsStaticRedrawRef = useRef<boolean>(true)
 
+  // Fetch actual service connections
+  useEffect(() => {
+    const loadConnections = async () => {
+      try {
+        const data = await fetchMetricsConnections()
+        setConnections(data)
+      } catch (error) {
+        console.error('Failed to fetch connections:', error)
+        setConnections([])
+      }
+    }
+
+    loadConnections().catch(console.error)
+    // Refresh connections every 30 seconds
+    const interval = setInterval(() => {
+      loadConnections().catch(console.error)
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
   // Check if there are active connections (for conditional animation)
   const hasActiveConnections = useMemo(() => {
-    return nodes.some(node => String(node.service.status) === 'active')
-  }, [nodes])
+    return connections.length > 0
+  }, [connections])
 
   // Responsive canvas sizing with debounce
   useEffect(() => {
@@ -116,39 +138,38 @@ export function NetworkGraph({ services }: NetworkGraphProps) {
       offscreenCtx.translate(pan.x, pan.y)
       offscreenCtx.scale(zoom, zoom)
 
-      // Draw connection lines (static part)
-      nodes.forEach((node1, i) => {
-        nodes.slice(i + 1).forEach((node2) => {
-          const isNode1Active = String(node1.service.status) === 'active'
-          const isNode2Active = String(node2.service.status) === 'active'
-          if (isNode1Active && isNode2Active) {
-            offscreenCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
-            offscreenCtx.lineWidth = 2
-            offscreenCtx.beginPath()
-            offscreenCtx.moveTo(node1.x, node1.y)
-            offscreenCtx.lineTo(node2.x, node2.y)
-            offscreenCtx.stroke()
+      // Draw connection lines only for actual service-to-service calls
+      connections.forEach((connection) => {
+        const sourceNode = nodes.find(n => n.service.name === connection.source_service)
+        const targetNode = nodes.find(n => n.service.name === connection.target_service)
 
-            // Directional arrow
-            const dx = node2.x - node1.x
-            const dy = node2.y - node1.y
-            const midX = (node1.x + node2.x) / 2
-            const midY = (node1.y + node2.y) / 2
-            const angle = Math.atan2(dy, dx)
+        if (sourceNode && targetNode) {
+          offscreenCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
+          offscreenCtx.lineWidth = 2
+          offscreenCtx.beginPath()
+          offscreenCtx.moveTo(sourceNode.x, sourceNode.y)
+          offscreenCtx.lineTo(targetNode.x, targetNode.y)
+          offscreenCtx.stroke()
 
-            offscreenCtx.save()
-            offscreenCtx.translate(midX, midY)
-            offscreenCtx.rotate(angle)
-            offscreenCtx.fillStyle = 'rgba(255, 255, 255, 0.5)'
-            offscreenCtx.beginPath()
-            offscreenCtx.moveTo(8, 0)
-            offscreenCtx.lineTo(-4, -4)
-            offscreenCtx.lineTo(-4, 4)
-            offscreenCtx.closePath()
-            offscreenCtx.fill()
-            offscreenCtx.restore()
-          }
-        })
+          // Directional arrow
+          const dx = targetNode.x - sourceNode.x
+          const dy = targetNode.y - sourceNode.y
+          const midX = (sourceNode.x + targetNode.x) / 2
+          const midY = (sourceNode.y + targetNode.y) / 2
+          const angle = Math.atan2(dy, dx)
+
+          offscreenCtx.save()
+          offscreenCtx.translate(midX, midY)
+          offscreenCtx.rotate(angle)
+          offscreenCtx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+          offscreenCtx.beginPath()
+          offscreenCtx.moveTo(8, 0)
+          offscreenCtx.lineTo(-4, -4)
+          offscreenCtx.lineTo(-4, 4)
+          offscreenCtx.closePath()
+          offscreenCtx.fill()
+          offscreenCtx.restore()
+        }
       })
 
       // Draw nodes
@@ -219,34 +240,33 @@ export function NetworkGraph({ services }: NetworkGraphProps) {
         ctx.translate(pan.x, pan.y)
         ctx.scale(zoom, zoom)
 
-        // Draw animated dots on active connections
-        nodes.forEach((node1, i) => {
-          nodes.slice(i + 1).forEach((node2) => {
-            const isNode1Active = String(node1.service.status) === 'active'
-            const isNode2Active = String(node2.service.status) === 'active'
-            if (isNode1Active && isNode2Active) {
-              const dx = node2.x - node1.x
-              const dy = node2.y - node1.y
-              const numDots = 3
+        // Draw animated dots on actual service connections
+        connections.forEach((connection) => {
+          const sourceNode = nodes.find(n => n.service.name === connection.source_service)
+          const targetNode = nodes.find(n => n.service.name === connection.target_service)
 
-              for (let j = 0; j < numDots; j++) {
-                const offset = (j / numDots) + (timestamp / 2000) % 1
-                const progress = offset % 1
-                const dotX = node1.x + dx * progress
-                const dotY = node1.y + dy * progress
+          if (sourceNode && targetNode) {
+            const dx = targetNode.x - sourceNode.x
+            const dy = targetNode.y - sourceNode.y
+            const numDots = 3
 
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
-                ctx.beginPath()
-                ctx.arc(dotX, dotY, 3, 0, Math.PI * 2)
-                ctx.fill()
+            for (let j = 0; j < numDots; j++) {
+              const offset = (j / numDots) + (timestamp / 2000) % 1
+              const progress = offset % 1
+              const dotX = sourceNode.x + dx * progress
+              const dotY = sourceNode.y + dy * progress
 
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
-                ctx.beginPath()
-                ctx.arc(dotX, dotY, 6, 0, Math.PI * 2)
-                ctx.fill()
-              }
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
+              ctx.beginPath()
+              ctx.arc(dotX, dotY, 3, 0, Math.PI * 2)
+              ctx.fill()
+
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'
+              ctx.beginPath()
+              ctx.arc(dotX, dotY, 6, 0, Math.PI * 2)
+              ctx.fill()
             }
-          })
+          }
         })
 
         ctx.restore()
@@ -269,7 +289,7 @@ export function NetworkGraph({ services }: NetworkGraphProps) {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [nodes, zoom, pan, selectedNode, hasActiveConnections, isDragging])
+  }, [nodes, connections, zoom, pan, selectedNode, hasActiveConnections, isDragging])
 
   const getEventCoords = useCallback((e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current

@@ -11,6 +11,7 @@ import { DependencyAnalyzer } from './discovery/dependency-analyzer';
 import { ServiceNameDetector } from './discovery/service-name-detector';
 import { ApiClient } from './client/api-client';
 import { MetricsTracker } from './middleware/metrics-tracker';
+import { HttpInterceptor } from './client/http-interceptor';
 
 /**
  * Lattice Plugin for Express.js
@@ -25,6 +26,7 @@ export class LatticePlugin {
   private metadata: ServiceMetadataSubmission | null = null;
   private submitTimer: NodeJS.Timeout | null = null;
   private metricsTracker: MetricsTracker | null = null;
+  private httpInterceptor: HttpInterceptor | null = null;
 
   constructor(config: LatticeConfig = {}) {
     // Merge config with defaults
@@ -221,6 +223,30 @@ export class LatticePlugin {
   }
 
   /**
+   * Get HTTP interceptor for outgoing requests
+   * Automatically injects X-Origin-Service header for distributed tracing
+   *
+   * Usage:
+   * ```typescript
+   * const http = lattice.getHttpClient();
+   *
+   * // Use wrapped fetch
+   * const response = await http.fetch('http://other-service/api/users');
+   *
+   * // Or get headers for axios/other clients
+   * const headers = http.getTracingHeaders();
+   * axios.get('http://other-service/api/users', { headers });
+   * ```
+   */
+  getHttpClient(): HttpInterceptor {
+    if (!this.httpInterceptor) {
+      const serviceName = this.serviceNameDetector.detectServiceName(this.config.serviceName);
+      this.httpInterceptor = new HttpInterceptor(serviceName);
+    }
+    return this.httpInterceptor;
+  }
+
+  /**
    * Handle errors with callback
    */
   private handleError(error: Error): void {
@@ -274,5 +300,6 @@ export class LatticePlugin {
   }
 }
 
-// Re-export types for convenience
+// Re-export types and utilities for convenience
 export * from './config/types';
+export { HttpInterceptor } from './client/http-interceptor';

@@ -22,13 +22,14 @@ class MetricsTracker {
             const originalEnd = res.end;
             res.end = function (...args) {
                 const responseTime = Date.now() - startTime;
+                const callerServiceName = req.get(core_1.HTTP_HEADERS.ORIGIN_SERVICE) || req.get('X-Origin-Service');
                 const metric = {
                     method: req.method,
                     path: req.path,
                     statusCode: res.statusCode,
                     responseTime,
                     timestamp: new Date(),
-                    serviceName: req.get('X-Service-Name'),
+                    callerServiceName,
                 };
                 self.storeMetric(metric);
                 self.submitMetrics();
