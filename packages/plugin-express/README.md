@@ -86,6 +86,42 @@ Submit metadata to Lattice collector API.
 
 Get currently analyzed metadata.
 
+### `createMetricsMiddleware(): RequestHandler`
+
+Create Express middleware to track runtime metrics (request counts, response times, error rates).
+
+**Usage:**
+
+```typescript
+import express from 'express';
+import { LatticePlugin } from '@lattice.black/plugin-express';
+
+const app = express();
+const lattice = new LatticePlugin({
+  serviceName: 'my-service',
+  apiEndpoint: 'https://api.lattice.dev/v1',
+  apiKey: process.env.LATTICE_API_KEY,
+});
+
+// Add metrics tracking middleware
+app.use(lattice.createMetricsMiddleware());
+
+// Your routes
+app.get('/users', (req, res) => res.json([]));
+app.post('/users', (req, res) => res.json({ id: 1 }));
+
+// Analyze service metadata
+await lattice.analyze(app);
+
+app.listen(3000);
+```
+
+**Features:**
+- Tracks method, path, status code, and response time for every request
+- Automatically submits metrics to Lattice API in batches
+- Non-blocking - errors won't affect your application
+- Works with or without calling `analyze()` first
+
 ### `start(): void`
 
 Start auto-submit interval.
