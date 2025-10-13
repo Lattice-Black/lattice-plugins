@@ -4,7 +4,8 @@ import type {
   ServiceMetricsStat,
   ServiceConnection,
   MetricsStatsResponse,
-  MetricsConnectionsResponse
+  MetricsConnectionsResponse,
+  RecentMetricsResponse
 } from '@/types'
 import { getSessionToken } from './supabase/server-utils'
 
@@ -106,7 +107,7 @@ export async function fetchMetricsConnections(): Promise<ServiceConnection[]> {
   return data.connections || []
 }
 
-export async function fetchRecentMetrics(serviceName: string, limit: number = 1000) {
+export async function fetchRecentMetrics(serviceName: string, limit: number = 1000): Promise<RecentMetricsResponse> {
   const url = `${API_BASE_URL}/metrics/recent/${encodeURIComponent(serviceName)}?limit=${limit}`
 
   const headers = await getAuthHeaders()
@@ -119,5 +120,5 @@ export async function fetchRecentMetrics(serviceName: string, limit: number = 10
     throw new Error(`Failed to fetch recent metrics: ${response.statusText}`)
   }
 
-  return response.json()
+  return response.json() as Promise<RecentMetricsResponse>
 }

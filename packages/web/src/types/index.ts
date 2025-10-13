@@ -171,3 +171,19 @@ export interface MetricsStatsResponse {
 export interface MetricsConnectionsResponse {
   connections: ServiceConnection[];
 }
+
+export interface ServiceMetric {
+  method: string;
+  path: string;
+  status_code: number;
+  response_time_ms: number;
+  timestamp: string;
+  caller_service_name?: string;
+}
+
+export interface RecentMetricsResponse {
+  success: boolean;
+  serviceName: string;
+  count: number;
+  metrics: ServiceMetric[];
+}

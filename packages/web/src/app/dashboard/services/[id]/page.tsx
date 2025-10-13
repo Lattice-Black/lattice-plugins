@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { fetchServiceById, fetchRecentMetrics } from '@/lib/api'
 import { formatDate, getRelativeTime } from '@/lib/utils'
 import { LoadingSpinner } from '@/components/Loading'
-import type { Route, Dependency } from '@/types'
+import type { Route, Dependency, RecentMetricsResponse } from '@/types'
 
 
 // Force dynamic rendering - authentication required
@@ -26,8 +26,8 @@ async function ServiceDetails({ id }: { id: string }) {
   const dependencies: Dependency[] = service.dependencies || []
 
   // Fetch recent metrics for this service
-  let metricsData: any = null
-  let routeMetrics: Record<string, { count: number; avgTime: number; errors: number; errorRate: number }> = {}
+  let metricsData: RecentMetricsResponse | null = null
+  const routeMetrics: Record<string, { count: number; avgTime: number; errors: number; errorRate: number }> = {}
 
   try {
     metricsData = await fetchRecentMetrics(service.name)
@@ -42,7 +42,7 @@ async function ServiceDetails({ id }: { id: string }) {
         stats[key] = { count: 0, totalTime: 0, errors: 0 }
       }
       stats[key].count++
-      stats[key].totalTime += metric.response_time_ms || 0
+      stats[key].totalTime += metric.response_time_ms
       if (metric.status_code >= 400) stats[key].errors++
     }
 
