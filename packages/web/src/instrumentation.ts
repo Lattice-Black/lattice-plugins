@@ -40,7 +40,7 @@ async function initializeLogging() {
     // Dynamic import to avoid bundling issues
     const { initLogger } = await import('./lib/logging')
 
-    await initLogger({
+    initLogger({
       level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
       service: 'lattice-web',
       environment: process.env.NODE_ENV || 'development',
