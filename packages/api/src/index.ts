@@ -8,8 +8,9 @@ import { createApiRouter } from './routes';
 
 /**
  * Create and configure Express application
+ * @param metricsMiddleware Optional metrics tracking middleware to add before routes
  */
-const createApp = (): express.Application => {
+const createApp = (metricsMiddleware?: express.RequestHandler): express.Application => {
   const app = express();
 
   // Security middleware
@@ -34,6 +35,12 @@ const createApp = (): express.Application => {
   // Request logging
   app.use(requestLogger);
 
+  // Metrics tracking middleware (must be BEFORE routes)
+  if (metricsMiddleware) {
+    app.use(metricsMiddleware);
+    console.log('📊 Metrics middleware registered');
+  }
+
   // API routes
   app.use('/api/v1', createApiRouter());
 
@@ -52,15 +59,14 @@ const startServer = async (): Promise<void> => {
     // Validate environment
     validateEnv();
 
-    // Create Express app
-    const app = createApp();
+    // Initialize Lattice plugin and get metrics middleware BEFORE creating app
+    let latticePlugin: any = null;
+    let metricsMiddleware: express.RequestHandler | undefined = undefined;
 
-    // Initialize Lattice self-discovery and metrics BEFORE starting server
-    // This ensures middleware is registered before routes start handling requests
     try {
       const { LatticePlugin } = await import('@lattice.black/plugin-express');
 
-      const lattice = new LatticePlugin({
+      latticePlugin = new LatticePlugin({
         serviceName: 'lattice-api',
         environment: env.NODE_ENV,
         apiEndpoint: `http://localhost:${env.PORT}/api/v1`,
@@ -69,18 +75,25 @@ const startServer = async (): Promise<void> => {
         autoSubmit: true,
       });
 
-      // Add metrics tracking middleware
-      // This must be done BEFORE app.listen() to track all requests
-      app.use(lattice.createMetricsMiddleware());
-
-      // Analyze routes and submit metadata
-      await lattice.analyze(app);
-
-      console.log('✅ Lattice self-discovery initialized');
-      console.log('📊 Metrics tracking enabled');
+      // Get metrics middleware to pass to createApp
+      metricsMiddleware = latticePlugin.createMetricsMiddleware();
+      console.log('✅ Lattice plugin initialized');
     } catch (error) {
-      console.error('⚠️  Lattice self-discovery failed:', error);
-      // Don't crash the server if self-discovery fails
+      console.error('⚠️  Lattice plugin initialization failed:', error);
+      // Continue without Lattice - don't crash the server
+    }
+
+    // Create Express app with metrics middleware
+    const app = createApp(metricsMiddleware);
+
+    // Analyze routes and submit metadata (after app is created with routes)
+    if (latticePlugin) {
+      try {
+        await latticePlugin.analyze(app);
+        console.log('✅ Lattice self-discovery completed');
+      } catch (error) {
+        console.error('⚠️  Lattice self-discovery failed:', error);
+      }
     }
 
     // Start listening
