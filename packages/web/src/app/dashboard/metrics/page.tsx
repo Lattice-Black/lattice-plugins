@@ -6,6 +6,75 @@ import Link from 'next/link'
 
 // Force dynamic rendering - authentication required
 export const dynamic = 'force-dynamic'
+async function SystemHealthSummary() {
+  const stats: ServiceMetricsStat[] = await fetchMetricsStats()
+
+  if (!stats || stats.length === 0) {
+    return null
+  }
+
+  // Calculate aggregate metrics
+  const totalRequests = stats.reduce((sum, s) => sum + (s.total_requests || 0), 0)
+  const avgResponseTime = Math.round(
+    stats.reduce((sum, s) => sum + (s.avg_response_time_ms || 0), 0) / stats.length
+  )
+  const avgErrorRate = stats.reduce((sum, s) => sum + (Number(s.error_rate) || 0), 0) / stats.length
+  const healthyServices = stats.filter(s => Number(s.error_rate) < 1 && Number(s.avg_response_time_ms) < 500).length
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div className="border border-gray-800 p-6 bg-black/50 backdrop-blur-sm">
+        <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-2">
+          Total Services
+        </div>
+        <div className="text-4xl font-bold text-white">
+          {stats.length}
+        </div>
+        <div className="text-xs text-gray-500 font-mono mt-2">
+          {healthyServices} healthy
+        </div>
+      </div>
+
+      <div className="border border-gray-800 p-6 bg-black/50 backdrop-blur-sm">
+        <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-2">
+          Total Requests
+        </div>
+        <div className="text-4xl font-bold text-white">
+          {totalRequests.toLocaleString()}
+        </div>
+        <div className="text-xs text-gray-500 font-mono mt-2">
+          last 1 hour
+        </div>
+      </div>
+
+      <div className="border border-gray-800 p-6 bg-black/50 backdrop-blur-sm">
+        <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-2">
+          Avg Response Time
+        </div>
+        <div className={`text-4xl font-bold ${avgResponseTime > 500 ? 'text-yellow-400' : 'text-white'}`}>
+          {avgResponseTime}
+          <span className="text-xl text-gray-500 ml-1">ms</span>
+        </div>
+        <div className="text-xs text-gray-500 font-mono mt-2">
+          across all services
+        </div>
+      </div>
+
+      <div className="border border-gray-800 p-6 bg-black/50 backdrop-blur-sm">
+        <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-2">
+          Avg Error Rate
+        </div>
+        <div className={`text-4xl font-bold ${avgErrorRate > 5 ? 'text-red-400' : avgErrorRate > 1 ? 'text-yellow-400' : 'text-green-400'}`}>
+          {avgErrorRate.toFixed(1)}%
+        </div>
+        <div className="text-xs text-gray-500 font-mono mt-2">
+          system-wide average
+        </div>
+      </div>
+    </div>
+  )
+}
+
 async function MetricsStatsGrid() {
   const stats: ServiceMetricsStat[] = await fetchMetricsStats()
 
@@ -26,63 +95,86 @@ async function MetricsStatsGrid() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {stats.map((stat: ServiceMetricsStat) => (
-        <div key={stat.id} className="border border-gray-800 p-6 bg-black/50 backdrop-blur-sm hover:border-gray-700 transition-colors">
-          {/* Service Name */}
-          <div className="mb-6">
-            <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-1">
-              Service
-            </div>
-            <div className="text-xl font-bold text-white truncate">
-              {stat.name}
-            </div>
-          </div>
+      {stats.map((stat: ServiceMetricsStat) => {
+        const errorRate = Number(stat.error_rate || 0)
+        const avgTime = Number(stat.avg_response_time_ms || 0)
 
-          {/* Metrics Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Total Requests */}
-            <div>
-              <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-1">
-                Requests
-              </div>
-              <div className="text-2xl font-bold text-white">
-                {stat.total_requests || 0}
-              </div>
-            </div>
+        // Determine health status based on metrics
+        const isHealthy = errorRate < 1 && avgTime < 500
+        const isDegraded = errorRate >= 1 && errorRate < 5
+        const isDown = errorRate >= 5
 
-            {/* Avg Response Time */}
-            <div>
-              <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-1">
-                Avg Time
-              </div>
-              <div className="text-2xl font-bold text-white">
-                {stat.avg_response_time_ms || 0}
-                <span className="text-sm text-gray-500 ml-1">ms</span>
-              </div>
-            </div>
+        const healthColor = isHealthy ? 'text-green-400' : isDegraded ? 'text-yellow-400' : 'text-red-400'
+        const healthBorder = isHealthy ? 'border-green-900' : isDegraded ? 'border-yellow-900' : 'border-red-900'
+        const healthStatus = isHealthy ? 'Healthy' : isDegraded ? 'Degraded' : 'Critical'
 
-            {/* Error Rate */}
-            <div>
-              <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-1">
-                Error Rate
+        return (
+          <Link
+            key={stat.id}
+            href={`/dashboard/services/${stat.id}`}
+            className="border border-gray-800 p-6 bg-black/50 backdrop-blur-sm hover:border-gray-700 transition-all hover:scale-[1.02] cursor-pointer group"
+          >
+            {/* Service Name & Health */}
+            <div className="mb-6 flex items-start justify-between">
+              <div className="flex-1">
+                <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-1">
+                  Service
+                </div>
+                <div className="text-xl font-bold text-white truncate group-hover:text-gray-200">
+                  {stat.name}
+                </div>
               </div>
-              <div className={`text-2xl font-bold ${Number(stat.error_rate) > 5 ? 'text-red-500' : 'text-green-500'}`}>
-                {Number(stat.error_rate || 0).toFixed(1)}%
+              <div className={`px-2 py-1 border ${healthBorder} text-xs font-mono uppercase tracking-wider ${healthColor}`}>
+                {healthStatus}
               </div>
             </div>
 
-            {/* Last Request */}
-            <div>
-              <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-1">
-                Last Request
+            {/* Metrics Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Total Requests */}
+              <div>
+                <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-1">
+                  Requests
+                </div>
+                <div className="text-2xl font-bold text-white">
+                  {(stat.total_requests || 0).toLocaleString()}
+                </div>
               </div>
-              <div className="text-xs text-gray-400 font-mono">
-                {stat.last_request_time ? new Date(stat.last_request_time).toLocaleTimeString() : 'N/A'}
+
+              {/* Avg Response Time */}
+              <div>
+                <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-1">
+                  Avg Time
+                </div>
+                <div className={`text-2xl font-bold ${avgTime > 500 ? 'text-yellow-400' : avgTime > 1000 ? 'text-red-400' : 'text-white'}`}>
+                  {avgTime.toLocaleString()}
+                  <span className="text-sm text-gray-500 ml-1">ms</span>
+                </div>
+              </div>
+
+              {/* Error Rate */}
+              <div>
+                <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-1">
+                  Error Rate
+                </div>
+                <div className={`text-2xl font-bold ${errorRate > 5 ? 'text-red-400' : errorRate > 1 ? 'text-yellow-400' : 'text-green-400'}`}>
+                  {errorRate.toFixed(1)}%
+                </div>
+              </div>
+
+              {/* Last Request */}
+              <div>
+                <div className="font-mono text-xs text-gray-500 uppercase tracking-wider mb-1">
+                  Last Request
+                </div>
+                <div className="text-xs text-gray-400 font-mono">
+                  {stat.last_request_time ? new Date(stat.last_request_time).toLocaleTimeString() : 'N/A'}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      ))}
+          </Link>
+        )
+      })}
     </div>
   )
 }
@@ -178,6 +270,20 @@ export default function MetricsPage() {
           </div>
         </div>
       </div>
+
+      {/* System Health Summary */}
+      <Suspense fallback={
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="border border-gray-800 p-6 bg-black/50 animate-pulse">
+              <div className="h-4 bg-gray-800 rounded w-24 mb-2"></div>
+              <div className="h-10 bg-gray-800 rounded w-16"></div>
+            </div>
+          ))}
+        </div>
+      }>
+        <SystemHealthSummary />
+      </Suspense>
 
       {/* Service Statistics */}
       <div>
