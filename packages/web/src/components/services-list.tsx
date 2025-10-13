@@ -68,8 +68,8 @@ export function ServicesList() {
         <ServiceCard
           key={service.id}
           service={service}
-          routeCount={0}
-          dependencyCount={0}
+          routeCount={service.route_count || 0}
+          dependencyCount={service.dependency_count || 0}
         />
       ))}
     </div>

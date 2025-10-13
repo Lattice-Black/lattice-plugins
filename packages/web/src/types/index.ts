@@ -20,6 +20,8 @@ export interface Service {
     schemaVersion: string;
   };
   metadata?: Record<string, unknown>;
+  route_count?: number;
+  dependency_count?: number;
 }
 
 export enum ServiceStatus {

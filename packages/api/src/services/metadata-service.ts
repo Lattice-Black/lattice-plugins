@@ -187,9 +187,12 @@ export class MetadataService {
 
     const countQuery = `SELECT COUNT(*) FROM services ${whereClause}`;
     const servicesQuery = `
-      SELECT * FROM services
+      SELECT s.*,
+        (SELECT COUNT(*) FROM routes WHERE service_id = s.id) as route_count,
+        (SELECT COUNT(*) FROM dependencies WHERE service_id = s.id) as dependency_count
+      FROM services s
       ${whereClause}
-      ORDER BY last_seen DESC
+      ORDER BY s.last_seen DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
