@@ -7,6 +7,11 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+  // Keep these packages out of webpack bundle for better performance
+  serverComponentsExternalPackages: [
+    'pino',
+    'pino-pretty',
+  ],
 }
 
 module.exports = nextConfig
