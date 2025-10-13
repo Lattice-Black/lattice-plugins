@@ -41,6 +41,12 @@ export function Header() {
                     Services
                   </Link>
                   <Link
+                    href="/dashboard/metrics"
+                    className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
+                  >
+                    Metrics
+                  </Link>
+                  <Link
                     href="/dashboard/graph"
                     className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
                   >
@@ -145,6 +151,13 @@ export function Header() {
                 className="font-mono text-lg text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
               >
                 Services
+              </Link>
+              <Link
+                href="/dashboard/metrics"
+                onClick={closeMobileMenu}
+                className="font-mono text-lg text-gray-400 hover:text-white transition-colors uppercase tracking-wider"
+              >
+                Metrics
               </Link>
               <Link
                 href="/dashboard/graph"
