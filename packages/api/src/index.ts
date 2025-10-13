@@ -66,10 +66,15 @@ const startServer = async (): Promise<void> => {
     try {
       const { LatticePlugin } = await import('@lattice.black/plugin-express');
 
+      // Use Railway public URL in production, localhost in development
+      const apiEndpoint = env.NODE_ENV === 'production'
+        ? 'https://lattice-production.up.railway.app/api/v1'
+        : `http://localhost:${env.PORT}/api/v1`;
+
       latticePlugin = new LatticePlugin({
         serviceName: 'lattice-api',
         environment: env.NODE_ENV,
-        apiEndpoint: `http://localhost:${env.PORT}/api/v1`,
+        apiEndpoint,
         apiKey: env.LATTICE_API_KEY,
         enabled: true,
         autoSubmit: true,
