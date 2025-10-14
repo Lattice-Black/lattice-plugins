@@ -1,11 +1,10 @@
 {
-  "name": "@lattice/monorepo",
+  "name": "@lattice.black/plugins",
   "version": "0.1.0",
   "private": true,
-  "description": "Lattice - Service discovery and visualization platform",
+  "description": "Lattice Plugins - Open-source service discovery plugins for Express.js and Next.js",
   "workspaces": [
-    "packages/*",
-    "examples/*"
+    "packages/*"
   ],
   "scripts": {
     "dev": "turbo run dev",

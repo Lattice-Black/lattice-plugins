@@ -1,238 +1,208 @@
-# Lattice
+# Lattice Plugins
 
-**Service discovery and visualization platform for microservices**
+Open-source service discovery and monitoring plugins for Express.js and Next.js applications.
 
-Lattice automatically discovers routes, dependencies, and connections in your services, then visualizes them in a beautiful dashboard.
+## Overview
 
-## Quick Start
+Lattice provides automatic service discovery, route detection, and distributed tracing for Node.js microservices. This monorepo contains the public plugins that integrate with your applications.
 
-### 1. Start Infrastructure
+## Packages
 
-```bash
-# Start PostgreSQL and Redis
-docker-compose up -d
+### [@lattice.black/core](./packages/core)
 
-# Wait for services to be healthy
-docker-compose ps
-```
-
-### 2. Setup Database
+Core types, validators, and utilities shared across all Lattice plugins.
 
 ```bash
-cd packages/api
-yarn install
-yarn db:push
+yarn add @lattice.black/core
 ```
 
-### 3. Start Lattice API
+### [@lattice.black/plugin-express](./packages/plugin-express)
+
+Service discovery plugin for Express.js applications.
 
 ```bash
-cd packages/api
-yarn dev
+yarn add @lattice.black/plugin-express
 ```
 
-The API will be running at `http://localhost:3000`
+**Features:**
+- Automatic route discovery
+- Dependency analysis
+- Request metrics tracking
+- Distributed tracing with HTTP headers
+- Service-to-service connection tracking
 
-### 4. Run Demo App
+**Quick Start:**
 
-In a new terminal:
+```typescript
+import express from 'express';
+import { LatticePlugin } from '@lattice.black/plugin-express';
+
+const app = express();
+
+const lattice = new LatticePlugin({
+  apiUrl: 'https://api.lattice.black',
+  apiKey: process.env.LATTICE_API_KEY,
+  serviceName: 'my-service',
+  environment: 'production'
+});
+
+// Use metrics middleware
+app.use(lattice.createMetricsMiddleware());
+
+// Analyze and submit service metadata
+lattice.start();
+
+// Use HTTP client for outgoing requests with distributed tracing
+const httpClient = lattice.getHttpClient();
+const response = await httpClient.fetch('https://api.example.com/data');
+```
+
+### [@lattice.black/plugin-nextjs](./packages/plugin-nextjs)
+
+Service discovery plugin for Next.js applications (App Router & Pages Router).
 
 ```bash
-cd examples/demo-express-app
-yarn install
-yarn dev
+yarn add @lattice.black/plugin-nextjs
 ```
 
-The demo app will be running at `http://localhost:3001`
+**Features:**
+- Next.js 13+ App Router support
+- Pages Router support
+- API route discovery
+- Server component tracking
+- Distributed tracing
+- CLI for analysis
 
-### 5. Query Discovered Services
+**Quick Start:**
 
-```bash
-# List all services
-curl http://localhost:3000/api/v1/services
+```typescript
+// instrumentation.ts (Next.js 13+)
+import { LatticePlugin } from '@lattice.black/plugin-nextjs';
 
-# Get service details
-curl http://localhost:3000/api/v1/services/demo-express-app
+export async function register() {
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    const lattice = new LatticePlugin({
+      apiUrl: process.env.LATTICE_API_URL,
+      apiKey: process.env.LATTICE_API_KEY,
+      serviceName: 'my-nextjs-app',
+      environment: process.env.NODE_ENV
+    });
+
+    await lattice.start();
+  }
+}
 ```
 
-## Project Structure
+See the [Next.js User Guide](./packages/plugin-nextjs/USER_GUIDE.md) for detailed setup instructions.
 
+## Getting Started
+
+### 1. Sign up for Lattice
+
+Visit [lattice.black](https://www.lattice.black) to create a free account and get your API key.
+
+### 2. Install the plugin for your framework
+
+Choose Express or Next.js based on your application.
+
+### 3. Configure the plugin
+
+Add your API key and service configuration:
+
+```typescript
+const lattice = new LatticePlugin({
+  apiUrl: 'https://api.lattice.black',
+  apiKey: process.env.LATTICE_API_KEY, // Get this from lattice.black
+  serviceName: 'my-service',
+  environment: 'production',
+  autoSubmit: true, // Automatically send metadata every 5 minutes
+  autoSubmitInterval: 300000 // 5 minutes
+});
 ```
-lattice/
-├── packages/
-│   ├── core/              # @lattice.black/core - Shared types and validators
-│   ├── plugin-express/    # @lattice.black/plugin-express - Express.js plugin
-│   ├── plugin-nextjs/     # @lattice.black/plugin-nextjs - Next.js plugin
-│   ├── api/               # @lattice/api - Collector API
-│   └── web/               # @lattice/web - Dashboard UI
-├── examples/
-│   ├── demo-express-app/  # Demo Express.js application
-│   └── demo-nextjs-app/   # Demo Next.js application
-├── specs/                 # Feature specifications
-└── docker-compose.yml     # PostgreSQL + Redis
+
+### 4. Start tracking
+
+Call `lattice.start()` to begin automatic service discovery and monitoring.
+
+## Distributed Tracing
+
+Both plugins support distributed tracing using HTTP headers to track service-to-service communication:
+
+```typescript
+// Express
+const httpClient = lattice.getHttpClient();
+await httpClient.fetch('https://api.example.com'); // Injects X-Origin-Service header
+
+// Or wrap axios
+const axios = require('axios');
+const tracedAxios = httpClient.wrapAxios(axios);
+await tracedAxios.get('https://api.example.com');
 ```
 
-## Features
-
-### ✅ Completed Features
-
-- **@lattice.black/core** (Published to npm)
-  - TypeScript types for all entities
-  - JSON Schema validation
-  - ID generation utilities
-
-- **@lattice.black/plugin-express** (Published to npm)
-  - Automatic route discovery
-  - Dependency analysis from package.json
-  - 9-tier service name auto-detection
-  - Configurable metadata submission
-  - Auto-submit with intervals
-
-- **@lattice.black/plugin-nextjs** (Published to npm)
-  - Next.js App Router and Pages Router support
-  - Automatic API route discovery
-  - Dependency analysis
-  - Instrumentation hook support
-
-- **@lattice/api**
-  - PostgreSQL database with Prisma
-  - Redis for caching
-  - Full REST API for service metadata
-  - API key authentication
-  - Schema validation
-
-- **@lattice/web**
-  - Service dashboard with network graph
-  - Real-time metrics visualization
-  - Stripe subscription integration
-  - API key management
-
-### 🚧 In Progress
-
-- Additional framework plugins (FastAPI, Django, etc.)
-- Enhanced analytics and insights
-- Advanced graph visualization features
-- Multi-tenancy support
+The plugins automatically capture the `X-Origin-Service` header from incoming requests to track which services are calling your API.
 
 ## Documentation
 
-- [Quickstart Guide](specs/001-service-discovery-and/quickstart.md)
-- [Data Model](specs/001-service-discovery-and/data-model.md)
-- [API Contracts](specs/001-service-discovery-and/contracts/)
-- [Implementation Tasks](specs/001-service-discovery-and/tasks.md)
+- [Express Plugin README](./packages/plugin-express/README.md)
+- [Next.js Plugin README](./packages/plugin-nextjs/README.md)
+- [Next.js User Guide](./packages/plugin-nextjs/USER_GUIDE.md)
+- [Next.js Migration Guide](./packages/plugin-nextjs/MIGRATION.md)
 
 ## Development
 
-### Install Dependencies
+This is a monorepo managed with Yarn workspaces and Turborepo.
+
+### Setup
 
 ```bash
+git clone https://github.com/Lattice-Black/lattice-plugins.git
+cd lattice-plugins
 yarn install
 ```
 
-### Build All Packages
+### Build all packages
 
 ```bash
 yarn build
 ```
 
-### Run Tests
+### Run tests
 
 ```bash
 yarn test
 ```
 
-### Lint Code
+### Development mode
 
 ```bash
-yarn lint
+yarn dev
 ```
 
-## Environment Variables
+## Publishing
 
-### API (.env in packages/api)
-
-```bash
-DATABASE_URL="postgresql://lattice:lattice@localhost:5432/lattice"
-REDIS_URL="redis://localhost:6379"
-PORT=3000
-NODE_ENV="development"
-LATTICE_API_KEY=""  # Optional in development
-```
-
-### Plugin (in your Express app)
-
-```bash
-LATTICE_SERVICE_NAME="my-service"
-LATTICE_API_ENDPOINT="http://localhost:3000/api/v1"
-LATTICE_ENABLED="true"
-```
-
-## Architecture
-
-Lattice uses a plugin-based architecture:
-
-1. **Plugins** (e.g., @lattice.black/plugin-express) discover metadata in your services
-2. **Collector API** (@lattice/api) receives and stores metadata
-3. **Dashboard** (@lattice/web) visualizes the architecture
-
-## Installation
-
-Install plugins from npm:
-
-```bash
-# For Express.js applications
-yarn add @lattice.black/plugin-express
-
-# For Next.js applications
-yarn add @lattice.black/plugin-nextjs
-```
-
-See package READMEs for usage instructions:
-- [@lattice.black/plugin-express](packages/plugin-express/README.md)
-- [@lattice.black/plugin-nextjs](packages/plugin-nextjs/README.md)
-
-### Data Flow
-
-```
-┌─────────────────┐
-│  Your Express   │
-│      App        │
-└────────┬────────┘
-         │
-         │ (plugin analyzes)
-         │
-┌────────▼────────┐
-│ Lattice Plugin  │ Discovers:
-│                 │ • Routes
-│                 │ • Dependencies
-│                 │ • Service info
-└────────┬────────┘
-         │
-         │ (HTTP POST)
-         │
-┌────────▼────────┐
-│ Collector API   │ Stores:
-│                 │ • PostgreSQL
-│                 │ • Redis cache
-└────────┬────────┘
-         │
-         │ (HTTP GET)
-         │
-┌────────▼────────┐
-│   Dashboard     │ Visualizes:
-│   (Coming Soon) │ • Service graph
-│                 │ • Routes
-└─────────────────┘ • Dependencies
-```
-
-## License
-
-MIT
+Packages are published to npm under the `@lattice.black` scope. See [PUBLISHING.md](./PUBLISHING.md) for details.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+We welcome contributions! Please see our contributing guidelines (coming soon) for details on:
 
----
+- Code of conduct
+- Development workflow
+- Pull request process
+- Coding standards
 
-Built with ❤️ using spec-driven development
+## License
+
+MIT License - see LICENSE file for details.
+
+## Support
+
+- Documentation: [lattice.black/docs](https://www.lattice.black/docs)
+- Issues: [GitHub Issues](https://github.com/Lattice-Black/lattice-plugins/issues)
+- Discord: (coming soon)
+- Email: support@lattice.black
+
+## Related Projects
+
+- [Lattice Platform](https://www.lattice.black) - The hosted service discovery and monitoring platform
+- Private monorepo contains the SaaS dashboard and API server (not open-source)
