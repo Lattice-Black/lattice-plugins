@@ -22,7 +22,8 @@ class MetricsTracker {
             const originalEnd = res.end;
             res.end = function (...args) {
                 const responseTime = Date.now() - startTime;
-                const callerServiceName = req.get(core_1.HTTP_HEADERS.ORIGIN_SERVICE) || req.get('X-Origin-Service');
+                const headerValue = req.get(core_1.HTTP_HEADERS.ORIGIN_SERVICE) || req.get('X-Origin-Service');
+                const callerServiceName = Array.isArray(headerValue) ? headerValue[0] : headerValue;
                 const metric = {
                     method: req.method,
                     path: req.path,
