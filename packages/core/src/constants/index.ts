@@ -56,6 +56,17 @@ export const SERVICE_STATUS = {
 } as const;
 
 /**
+ * Service health status values
+ */
+export const HEALTH_STATUS = {
+  HEALTHY: 'healthy',
+  DEGRADED: 'degraded',
+  CRITICAL: 'critical',
+} as const;
+
+export type HealthStatus = typeof HEALTH_STATUS[keyof typeof HEALTH_STATUS];
+
+/**
  * Default configuration values
  */
 export const DEFAULTS = {
@@ -77,4 +88,32 @@ export const ENV_VARS = {
   LATTICE_SUBMIT_INTERVAL: 'LATTICE_SUBMIT_INTERVAL',
   SERVICE_NAME: 'SERVICE_NAME',
   NODE_ENV: 'NODE_ENV',
+} as const;
+
+/**
+ * Event batching configuration limits
+ */
+export const BATCH_LIMITS = {
+  /** Minimum batch size */
+  MIN_BATCH_SIZE: 1,
+  /** Maximum batch size */
+  MAX_BATCH_SIZE: 100,
+  /** Minimum flush interval (1 second) */
+  MIN_FLUSH_INTERVAL: 1000,
+  /** Maximum flush interval (30 seconds) */
+  MAX_FLUSH_INTERVAL: 30000,
+  /** Minimum queue size */
+  MIN_QUEUE_SIZE: 10,
+  /** Maximum queue size */
+  MAX_QUEUE_SIZE: 10000,
+} as const;
+
+/**
+ * Shutdown configuration
+ */
+export const SHUTDOWN_CONFIG = {
+  /** Default timeout for forceFlush in milliseconds */
+  DEFAULT_FLUSH_TIMEOUT: 5000,
+  /** Default timeout for shutdown in milliseconds */
+  DEFAULT_SHUTDOWN_TIMEOUT: 10000,
 } as const;
