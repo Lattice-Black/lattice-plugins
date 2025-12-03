@@ -43,8 +43,54 @@ class ApiClient {
             });
             return response.ok;
         }
-        catch (error) {
+        catch {
             return false;
+        }
+    }
+    async submitErrors(errors) {
+        const url = `${this.apiEndpoint}/errors/batch`;
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(this.apiKey && { [core_1.HTTP_HEADERS.API_KEY]: this.apiKey }),
+                },
+                body: JSON.stringify({ errors }),
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error submission failed: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Failed to submit errors: ${error.message}`);
+            }
+            throw error;
+        }
+    }
+    async submitMetrics(metrics) {
+        const url = `${this.apiEndpoint}/performance/traces/batch`;
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(this.apiKey && { [core_1.HTTP_HEADERS.API_KEY]: this.apiKey }),
+                },
+                body: JSON.stringify({ traces: metrics }),
+            });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Metrics submission failed: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Failed to submit metrics: ${error.message}`);
+            }
+            throw error;
         }
     }
 }

@@ -2,24 +2,53 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MetricsTracker = void 0;
 const core_1 = require("@lattice.black/core");
+const event_queue_1 = require("../utils/event-queue");
+const sampler_1 = require("../utils/sampler");
 class MetricsTracker {
     serviceName;
     apiEndpoint;
     apiKey;
-    metrics = [];
-    maxMetrics = 1000;
-    constructor(serviceName, apiEndpoint, apiKey) {
+    sampler;
+    eventQueue;
+    enabled;
+    debug;
+    isShutdown = false;
+    constructor(serviceName, apiEndpoint, apiKey, config = {}) {
         this.serviceName = serviceName;
         this.apiEndpoint = apiEndpoint;
         this.apiKey = apiKey;
+        this.enabled = config.enabled !== false;
+        this.debug = config.debug ?? false;
+        this.sampler = (0, sampler_1.createSampler)({
+            errors: 1.0,
+            metrics: config.sampling?.metrics ?? 1.0,
+            rules: config.sampling?.rules ?? [],
+        });
+        this.eventQueue = (0, event_queue_1.createEventQueue)(async (metrics) => this.sendBatch(metrics), {
+            maxBatchSize: config.batching?.maxBatchSize ?? 10,
+            flushIntervalMs: config.batching?.flushIntervalMs ?? 5000,
+            maxQueueSize: config.batching?.maxQueueSize ?? 1000,
+            onError: (error) => this.log('error', `Batch send failed: ${error.message}`),
+            enabled: this.enabled,
+        });
     }
     middleware() {
-        const self = this;
-        console.log('[MetricsTracker] middleware() called - returning handler function');
         return (req, res, next) => {
-            console.log(`[MetricsTracker] MIDDLEWARE INVOKED: ${req.method} ${req.path}`);
+            if (!this.enabled || this.isShutdown) {
+                return next();
+            }
+            const shouldTrack = this.sampler.shouldSample({
+                eventType: 'metric',
+                path: req.path,
+                method: req.method,
+            });
+            if (!shouldTrack) {
+                this.log('debug', `Skipping metric (sampled out): ${req.method} ${req.path}`);
+                return next();
+            }
             const startTime = Date.now();
-            const originalEnd = res.end;
+            const originalEnd = res.end.bind(res);
+            const self = this;
             res.end = function (...args) {
                 const responseTime = Date.now() - startTime;
                 const headerValue = req.get(core_1.HTTP_HEADERS.ORIGIN_SERVICE) || req.get('X-Origin-Service');
@@ -31,57 +60,87 @@ class MetricsTracker {
                     responseTime,
                     timestamp: new Date(),
                     callerServiceName,
+                    serviceName: self.serviceName,
                 };
-                self.storeMetric(metric);
-                self.submitMetrics();
-                return originalEnd.apply(this, args);
+                self.enqueueMetric(metric);
+                return originalEnd(...args);
             };
             next();
         };
     }
-    storeMetric(metric) {
-        this.metrics.push(metric);
-        console.log(`[MetricsTracker] Stored metric ${this.metrics.length}: ${metric.method} ${metric.path} - ${metric.statusCode} (${metric.responseTime}ms)`);
-        if (this.metrics.length > this.maxMetrics) {
-            this.metrics.shift();
-        }
+    async forceFlush() {
+        await this.eventQueue.forceFlush();
     }
-    async submitMetrics() {
-        if (this.metrics.length % 10 === 0) {
-            const metricsToSend = [...this.metrics];
-            console.log(`[MetricsTracker] Submitting ${metricsToSend.length} metrics to ${this.apiEndpoint}/metrics`);
-            try {
-                const response = await fetch(`${this.apiEndpoint}/metrics`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(this.apiKey && { [core_1.HTTP_HEADERS.API_KEY]: this.apiKey }),
-                    },
-                    body: JSON.stringify({
-                        serviceName: this.serviceName,
-                        metrics: metricsToSend.slice(-10),
-                    }),
-                });
-                const result = await response.json();
-                console.log(`[MetricsTracker] Submission result:`, result);
-            }
-            catch (error) {
-                console.error('[MetricsTracker] Failed to submit metrics:', error);
-            }
-        }
+    shutdown() {
+        this.isShutdown = true;
+        this.eventQueue.shutdown();
+    }
+    getState() {
+        return this.eventQueue.getState();
     }
     getStats() {
-        const totalRequests = this.metrics.length;
-        const avgResponseTime = this.metrics.reduce((sum, m) => sum + m.responseTime, 0) / totalRequests || 0;
-        const errorCount = this.metrics.filter(m => m.statusCode >= 400).length;
-        const errorRate = totalRequests > 0 ? (errorCount / totalRequests) * 100 : 0;
+        const state = this.eventQueue.getState();
         return {
-            totalRequests,
-            avgResponseTime: Math.round(avgResponseTime),
-            errorCount,
-            errorRate: errorRate.toFixed(2),
-            recentRequests: this.metrics.slice(-10),
+            queueSize: state.size,
+            droppedCount: state.dropped,
+            flushCount: state.flushCount,
+            failedFlushCount: state.failedFlushCount,
         };
+    }
+    enqueueMetric(metric) {
+        const queued = this.eventQueue.enqueue(metric);
+        if (queued) {
+            this.log('debug', `Queued metric: ${metric.method} ${metric.path} - ${metric.statusCode} (${metric.responseTime}ms)`);
+        }
+        else {
+            this.log('warn', 'Metric dropped: queue full');
+        }
+    }
+    async sendBatch(metrics) {
+        if (metrics.length === 0) {
+            return;
+        }
+        try {
+            const traces = metrics.map((metric) => ({
+                service_id: metric.serviceName,
+                operation_name: `${metric.method} ${metric.path}`,
+                operation_type: 'http_request',
+                start_time: new Date(metric.timestamp.getTime() - metric.responseTime),
+                duration_ms: metric.responseTime,
+                status_code: metric.statusCode,
+                method: metric.method,
+                path: metric.path,
+                caller_service: metric.callerServiceName,
+            }));
+            const response = await fetch(`${this.apiEndpoint}/performance/traces/batch`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(this.apiKey && { [core_1.HTTP_HEADERS.API_KEY]: this.apiKey }),
+                },
+                body: JSON.stringify({ traces }),
+            });
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status} ${response.statusText}`);
+            }
+            this.log('debug', `Sent ${metrics.length} metrics to API`);
+        }
+        catch (error) {
+            this.log('error', `Failed to send metrics: ${error.message}`);
+            throw error;
+        }
+    }
+    log(level, message) {
+        const prefix = '[Lattice MetricsTracker]';
+        if (level === 'error') {
+            console.error(`${prefix} ${message}`);
+        }
+        else if (level === 'warn') {
+            console.warn(`${prefix} ${message}`);
+        }
+        else if (this.debug) {
+            console.log(`${prefix} ${message}`);
+        }
     }
 }
 exports.MetricsTracker = MetricsTracker;

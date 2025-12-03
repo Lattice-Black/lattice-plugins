@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HttpInterceptor = exports.LatticePlugin = void 0;
+exports.LatticeExpress = exports.createSafeSyncWrapper = exports.createSafeAsyncWrapper = exports.safeSync = exports.safeAsync = exports.createDataScrubber = exports.DataScrubber = exports.createSampler = exports.Sampler = exports.createEventQueue = exports.EventQueue = exports.NoOpClient = exports.ErrorCapture = exports.HttpInterceptor = exports.LatticePlugin = void 0;
 const tslib_1 = require("tslib");
 const core_1 = require("@lattice.black/core");
 const types_1 = require("./config/types");
@@ -8,8 +8,11 @@ const route_analyzer_1 = require("./discovery/route-analyzer");
 const dependency_analyzer_1 = require("./discovery/dependency-analyzer");
 const service_name_detector_1 = require("./discovery/service-name-detector");
 const api_client_1 = require("./client/api-client");
+const noop_client_1 = require("./client/noop-client");
 const metrics_tracker_1 = require("./middleware/metrics-tracker");
 const http_interceptor_1 = require("./client/http-interceptor");
+const error_capture_1 = require("./middleware/error-capture");
+const safe_wrapper_1 = require("./utils/safe-wrapper");
 class LatticePlugin {
     config;
     routeAnalyzer;
@@ -20,23 +23,44 @@ class LatticePlugin {
     submitTimer = null;
     metricsTracker = null;
     httpInterceptor = null;
+    errorCapture = null;
+    state = core_1.SDKState.Uninitialized;
+    initError = null;
     constructor(config = {}) {
-        this.config = {
-            ...types_1.DEFAULT_CONFIG,
-            ...config,
-        };
-        this.routeAnalyzer = new route_analyzer_1.RouteAnalyzer();
-        this.dependencyAnalyzer = new dependency_analyzer_1.DependencyAnalyzer();
-        this.serviceNameDetector = new service_name_detector_1.ServiceNameDetector();
-        this.apiClient = new api_client_1.ApiClient(this.config.apiEndpoint, this.config.apiKey);
+        try {
+            this.state = core_1.SDKState.Initializing;
+            this.config = (0, types_1.resolveConfig)(config);
+            this.routeAnalyzer = new route_analyzer_1.RouteAnalyzer();
+            this.dependencyAnalyzer = new dependency_analyzer_1.DependencyAnalyzer();
+            this.serviceNameDetector = new service_name_detector_1.ServiceNameDetector();
+            if (this.config.enabled) {
+                this.apiClient = new api_client_1.ApiClient(this.config.apiEndpoint, this.config.apiKey);
+            }
+            else {
+                this.apiClient = new noop_client_1.NoOpClient();
+            }
+            this.state = core_1.SDKState.Ready;
+            this.log('debug', 'Plugin initialized successfully');
+        }
+        catch (error) {
+            this.state = core_1.SDKState.Failed;
+            this.initError = error;
+            this.apiClient = new noop_client_1.NoOpClient();
+            this.routeAnalyzer = new route_analyzer_1.RouteAnalyzer();
+            this.dependencyAnalyzer = new dependency_analyzer_1.DependencyAnalyzer();
+            this.serviceNameDetector = new service_name_detector_1.ServiceNameDetector();
+            this.config = (0, types_1.resolveConfig)({});
+            this.log('error', `Initialization failed: ${error.message}`);
+        }
     }
     async analyze(app) {
-        if (!this.config.enabled) {
-            console.log('Lattice plugin is disabled');
+        if (!this.config.enabled || this.state === core_1.SDKState.Failed) {
+            this.log('debug', 'Plugin is disabled or failed, returning empty metadata');
             return this.getEmptyMetadata();
         }
-        try {
+        const result = await (0, safe_wrapper_1.safeAsync)(async () => {
             const serviceName = this.serviceNameDetector.detectServiceName(this.config.serviceName);
+            this.config.serviceName = serviceName;
             const pkgJson = this.getPackageJson();
             const serviceId = (0, core_1.generateId)();
             const service = {
@@ -52,7 +76,7 @@ class LatticePlugin {
                 lastSeen: new Date(),
                 discoveredBy: {
                     pluginName: '@lattice/plugin-express',
-                    pluginVersion: '0.1.0',
+                    pluginVersion: '0.2.0',
                     schemaVersion: '1.0.0',
                 },
             };
@@ -70,17 +94,14 @@ class LatticePlugin {
             if (this.config.onAnalyzed) {
                 this.config.onAnalyzed(this.metadata);
             }
-            console.log(`✅ Lattice discovered service "${serviceName}" with ${routes.length} routes and ${dependencies.length} dependencies`);
+            this.log('info', `Discovered service "${serviceName}" with ${routes.length} routes and ${dependencies.length} dependencies`);
             if (this.config.autoSubmit) {
                 await this.submit();
             }
             this.start();
             return this.metadata;
-        }
-        catch (error) {
-            this.handleError(error);
-            throw error;
-        }
+        }, this.getEmptyMetadata(), 'LatticePlugin.analyze');
+        return result;
     }
     async submit(metadata) {
         if (!this.config.enabled) {
@@ -88,29 +109,33 @@ class LatticePlugin {
         }
         const dataToSubmit = metadata || this.metadata;
         if (!dataToSubmit) {
-            throw new Error('No metadata to submit. Call analyze() first.');
+            this.log('warn', 'No metadata to submit. Call analyze() first.');
+            return null;
         }
-        try {
+        const result = await (0, safe_wrapper_1.safeAsync)(async () => {
             const response = await this.apiClient.submitMetadata(dataToSubmit);
             if (this.config.onSubmitted) {
                 this.config.onSubmitted(response);
             }
-            console.log(`✅ Lattice metadata submitted: ${response.serviceId}`);
+            this.log('debug', `Metadata submitted: ${response.serviceId}`);
             return response;
-        }
-        catch (error) {
-            this.handleError(error);
-            return null;
-        }
+        }, null, 'LatticePlugin.submit');
+        return result;
     }
     getMetadata() {
         return this.metadata;
     }
     getServiceName() {
-        return this.metadata?.service.name || 'unknown';
+        return this.metadata?.service.name || this.config.serviceName || 'unknown';
     }
     isEnabled() {
         return this.config.enabled;
+    }
+    getState() {
+        return this.state;
+    }
+    getInitError() {
+        return this.initError;
     }
     start() {
         if (!this.config.enabled || !this.config.autoSubmit || this.submitTimer) {
@@ -119,8 +144,7 @@ class LatticePlugin {
         this.submitTimer = setInterval(() => {
             if (this.metadata) {
                 this.metadata.service.lastSeen = new Date();
-                this.submit().catch((error) => {
-                    console.error('Auto-submit failed:', error);
+                this.submit().catch(() => {
                 });
             }
         }, this.config.submitInterval);
@@ -132,10 +156,51 @@ class LatticePlugin {
             this.submitTimer = null;
         }
     }
+    async forceFlush(timeoutMs) {
+        this.log('debug', 'Force flushing all pending events');
+        const promises = [];
+        if (this.errorCapture) {
+            promises.push(this.errorCapture.forceFlush());
+        }
+        if (this.metricsTracker) {
+            promises.push(this.metricsTracker.forceFlush());
+        }
+        if (timeoutMs) {
+            await Promise.race([
+                Promise.allSettled(promises),
+                new Promise((resolve) => setTimeout(resolve, timeoutMs)),
+            ]);
+        }
+        else {
+            await Promise.allSettled(promises);
+        }
+    }
+    async shutdown(timeoutMs = 10000) {
+        if (this.state === core_1.SDKState.ShuttingDown || this.state === core_1.SDKState.Shutdown) {
+            return;
+        }
+        this.state = core_1.SDKState.ShuttingDown;
+        this.log('debug', 'Shutting down...');
+        this.stop();
+        await this.forceFlush(timeoutMs);
+        if (this.errorCapture) {
+            this.errorCapture.shutdown();
+        }
+        if (this.metricsTracker) {
+            this.metricsTracker.shutdown();
+        }
+        this.state = core_1.SDKState.Shutdown;
+        this.log('debug', 'Shutdown complete');
+    }
     createMetricsMiddleware() {
         if (!this.metricsTracker) {
             const serviceName = this.serviceNameDetector.detectServiceName(this.config.serviceName);
-            this.metricsTracker = new metrics_tracker_1.MetricsTracker(serviceName, this.config.apiEndpoint, this.config.apiKey);
+            this.metricsTracker = new metrics_tracker_1.MetricsTracker(serviceName, this.config.apiEndpoint, this.config.apiKey, {
+                enabled: this.config.enabled,
+                debug: this.config.debug,
+                sampling: this.config.sampling,
+                batching: this.config.batching,
+            });
         }
         return this.metricsTracker.middleware();
     }
@@ -146,12 +211,45 @@ class LatticePlugin {
         }
         return this.httpInterceptor;
     }
-    handleError(error) {
-        if (this.config.onError) {
-            this.config.onError(error);
+    errorHandler() {
+        if (!this.errorCapture) {
+            const serviceName = this.serviceNameDetector.detectServiceName(this.config.serviceName);
+            this.errorCapture = (0, error_capture_1.createErrorCapture)({
+                ...this.config,
+                serviceName,
+            });
         }
-        else {
-            console.error('Lattice error:', error);
+        return this.errorCapture.middleware();
+    }
+    async captureError(error, context) {
+        if (!this.errorCapture) {
+            const serviceName = this.serviceNameDetector.detectServiceName(this.config.serviceName);
+            this.errorCapture = (0, error_capture_1.createErrorCapture)({
+                ...this.config,
+                serviceName,
+            });
+        }
+        await this.errorCapture.captureError(error, context);
+    }
+    getConfig() {
+        return this.config;
+    }
+    log(level, message) {
+        const prefix = '[Lattice]';
+        if (level === 'error') {
+            console.error(`${prefix} ${message}`);
+            if (this.config.onError) {
+                this.config.onError(new Error(message));
+            }
+        }
+        else if (level === 'warn') {
+            console.warn(`${prefix} ${message}`);
+        }
+        else if (level === 'info') {
+            console.log(`${prefix} ✅ ${message}`);
+        }
+        else if (this.config.debug) {
+            console.log(`${prefix} ${message}`);
         }
     }
     getPackageJson() {
@@ -163,7 +261,7 @@ class LatticePlugin {
                 return JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
             }
         }
-        catch (error) {
+        catch {
         }
         return null;
     }
@@ -179,7 +277,7 @@ class LatticePlugin {
                 lastSeen: new Date(),
                 discoveredBy: {
                     pluginName: '@lattice/plugin-express',
-                    pluginVersion: '0.1.0',
+                    pluginVersion: '0.2.0',
                     schemaVersion: '1.0.0',
                 },
             },
@@ -192,4 +290,24 @@ exports.LatticePlugin = LatticePlugin;
 tslib_1.__exportStar(require("./config/types"), exports);
 var http_interceptor_2 = require("./client/http-interceptor");
 Object.defineProperty(exports, "HttpInterceptor", { enumerable: true, get: function () { return http_interceptor_2.HttpInterceptor; } });
+var error_capture_2 = require("./middleware/error-capture");
+Object.defineProperty(exports, "ErrorCapture", { enumerable: true, get: function () { return error_capture_2.ErrorCapture; } });
+var noop_client_2 = require("./client/noop-client");
+Object.defineProperty(exports, "NoOpClient", { enumerable: true, get: function () { return noop_client_2.NoOpClient; } });
+var event_queue_1 = require("./utils/event-queue");
+Object.defineProperty(exports, "EventQueue", { enumerable: true, get: function () { return event_queue_1.EventQueue; } });
+Object.defineProperty(exports, "createEventQueue", { enumerable: true, get: function () { return event_queue_1.createEventQueue; } });
+var sampler_1 = require("./utils/sampler");
+Object.defineProperty(exports, "Sampler", { enumerable: true, get: function () { return sampler_1.Sampler; } });
+Object.defineProperty(exports, "createSampler", { enumerable: true, get: function () { return sampler_1.createSampler; } });
+var data_scrubber_1 = require("./utils/data-scrubber");
+Object.defineProperty(exports, "DataScrubber", { enumerable: true, get: function () { return data_scrubber_1.DataScrubber; } });
+Object.defineProperty(exports, "createDataScrubber", { enumerable: true, get: function () { return data_scrubber_1.createDataScrubber; } });
+var safe_wrapper_2 = require("./utils/safe-wrapper");
+Object.defineProperty(exports, "safeAsync", { enumerable: true, get: function () { return safe_wrapper_2.safeAsync; } });
+Object.defineProperty(exports, "safeSync", { enumerable: true, get: function () { return safe_wrapper_2.safeSync; } });
+Object.defineProperty(exports, "createSafeAsyncWrapper", { enumerable: true, get: function () { return safe_wrapper_2.createSafeAsyncWrapper; } });
+Object.defineProperty(exports, "createSafeSyncWrapper", { enumerable: true, get: function () { return safe_wrapper_2.createSafeSyncWrapper; } });
+var index_1 = require("./index");
+Object.defineProperty(exports, "LatticeExpress", { enumerable: true, get: function () { return index_1.LatticePlugin; } });
 //# sourceMappingURL=index.js.map

@@ -1,6 +1,6 @@
 import { Application } from 'express';
-import { ServiceMetadataSubmission } from '@lattice.black/core';
-import { LatticeConfig, SubmissionResponse } from './config/types';
+import { ServiceMetadataSubmission, SDKState } from '@lattice.black/core';
+import { LatticeConfig, ResolvedLatticeConfig, SubmissionResponse } from './config/types';
 import { HttpInterceptor } from './client/http-interceptor';
 export declare class LatticePlugin {
     private config;
@@ -12,20 +12,37 @@ export declare class LatticePlugin {
     private submitTimer;
     private metricsTracker;
     private httpInterceptor;
+    private errorCapture;
+    private state;
+    private initError;
     constructor(config?: LatticeConfig);
     analyze(app: Application): Promise<ServiceMetadataSubmission>;
     submit(metadata?: ServiceMetadataSubmission): Promise<SubmissionResponse | null>;
     getMetadata(): ServiceMetadataSubmission | null;
     getServiceName(): string;
     isEnabled(): boolean;
+    getState(): SDKState;
+    getInitError(): Error | null;
     start(): void;
     stop(): void;
+    forceFlush(timeoutMs?: number): Promise<void>;
+    shutdown(timeoutMs?: number): Promise<void>;
     createMetricsMiddleware(): (req: import("express").Request, res: import("express").Response, next: import("express").NextFunction) => void;
     getHttpClient(): HttpInterceptor;
-    private handleError;
+    errorHandler(): (err: Error, req: import("express").Request, _res: import("express").Response, next: import("express").NextFunction) => Promise<void>;
+    captureError(error: Error, context?: Record<string, unknown>): Promise<void>;
+    getConfig(): Readonly<ResolvedLatticeConfig>;
+    private log;
     private getPackageJson;
     private getEmptyMetadata;
 }
 export * from './config/types';
 export { HttpInterceptor } from './client/http-interceptor';
+export { ErrorCapture } from './middleware/error-capture';
+export { NoOpClient, type LatticeApiClient } from './client/noop-client';
+export { EventQueue, createEventQueue } from './utils/event-queue';
+export { Sampler, createSampler } from './utils/sampler';
+export { DataScrubber, createDataScrubber } from './utils/data-scrubber';
+export { safeAsync, safeSync, createSafeAsyncWrapper, createSafeSyncWrapper, } from './utils/safe-wrapper';
+export { LatticePlugin as LatticeExpress } from './index';
 //# sourceMappingURL=index.d.ts.map
